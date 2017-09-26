@@ -45,8 +45,8 @@ if __name__ == "__main__":
     diabetes.target = diabetes.target[ntrain:]
 
     # Accuracy
-    predictions = clf.predict(diabetes.data)
-    print('Accuracy:',  accuracy_score(diabetes.target, predictions))
+    pred = clf.predict(diabetes.data)
+    print('Accuracy:',  accuracy_score(diabetes.target, pred))
 
     # Fairness measure
     print(equalized_odds_measure(diabetes, clf, [1]))  # Feature 1 is SEX
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # Plot of the FN (PCA)
 #    list_of_errors = [idx for idx in range(len(predictions)) if predictions[idx] != diabetes.target[idx]]
 #    list_of_oks = [idx for idx in range(len(predictions)) if predictions[idx] == diabetes.target[idx]]
-    list_of_fn = [idx for idx in range(len(predictions)) if predictions[idx] != diabetes.target[idx] == 1]
+    list_of_fn = [idx for idx in range(len(pred)) if pred[idx] != diabetes.target[idx] == 1]
     fig = plt.figure(1, figsize=(8, 6))
     ax = Axes3D(fig, elev=-150, azim=110)
     X_reduced = PCA(n_components=3).fit_transform(diabetes.data)
