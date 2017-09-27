@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def equalized_odds_measure(data, model, sensible_features):
+def equalized_odds_measure(data, model, sensible_features, ylabel):
     predictions = model.predict(data.data)
     truth = data.target
     eq_dict = {}
@@ -10,7 +10,7 @@ def equalized_odds_measure(data, model, sensible_features):
         values_of_sensible_feature = list(set(data.data[:, feature]))
         for val in values_of_sensible_feature:
             eq_tmp = None
-            positive_sensitive = np.sum([1.0 if data.data[i, feature] == val and truth[i] == 1 else 0.0
+            positive_sensitive = np.sum([1.0 if data.data[i, feature] == val and truth[i] == ylabel else 0.0
                                          for i in range(len(predictions))])
             if positive_sensitive > 0:
                 eq_tmp = np.sum([1.0 if predictions[i] == 1 and data.data[i, feature] == val and truth[i] == 1 else 0.0
@@ -20,17 +20,46 @@ def equalized_odds_measure(data, model, sensible_features):
     return eq_dict
 
 
+def statistical_parity_measure(data, model, sensible_features, ylabel):
+    predictions = model.predict(data.data)
+    sp_dict = {}
+    for feature in sensible_features:
+        sp_sensible_feature = {}
+        values_of_sensible_feature = list(set(data.data[:, feature]))
+        for val in values_of_sensible_feature:
+            sp_tmp = None
+            n_sensitive = np.sum([1.0 if data.data[i, feature] == val else 0.0 for i in range(len(predictions))])
+            if n_sensitive > 0:
+                sp_tmp = np.sum([1.0 if predictions[i] == ylabel and data.data[i, feature] == val else 0.0
+                                 for i in range(len(predictions))]) / n_sensitive
+            sp_sensible_feature[val] = sp_tmp
+        sp_dict[feature] = sp_sensible_feature
+    return sp_dict
+
+
+def disparate_impact_measure(data, model, sensible_features):
+    di_dict = statistical_parity_measure(data, model, sensible_features, ylabel=1)
+    for feature in di_dict:
+        values_of_sensible_feature = list(set(data.data[:, feature]))
+        if len(values_of_sensible_feature) != 2:
+            di_dict[feature] = {}
+        else:
+            di_dict[feature] = np.min([di_dict[feature][values_of_sensible_feature[0]] /
+                                       di_dict[feature][values_of_sensible_feature[1]],
+                                       di_dict[feature][values_of_sensible_feature[1]] /
+                                       di_dict[feature][values_of_sensible_feature[0]]])
+    return di_dict
+
+
 if __name__ == "__main__":
-    from sklearn import datasets
+    from load_data import load_binary_diabetes_uci
     from sklearn import svm
     from sklearn.metrics import accuracy_score
     import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
     from sklearn.decomposition import PCA
 
-    diabetes = datasets.load_diabetes()
-    # Make the target binary
-    diabetes.target = [1 if diabetes_progression > 139 else -1 for diabetes_progression in diabetes.target]
+    diabetes = load_binary_diabetes_uci()
     # 50% for train
     ntrain = len(diabetes.target) // 2
 

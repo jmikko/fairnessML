@@ -23,6 +23,20 @@ def load_heart_uci():
     return dataset
 
 
+def load_binary_diabetes_uci():
+    '''
+    Features:
+    0. Age
+    1. Sex
+    2. Body mass index
+    3. Average blood pressure
+    4-9. S1-S6
+    '''
+    dataset = sklearn.datasets.load_diabetes()
+    # Make the target binary: high progression Vs. low progression of the disease
+    dataset.target = [1 if diabetes_progression > 139 else -1 for diabetes_progression in dataset.target]
+    return dataset
+
 if __name__ == "__main__":
     data = load_heart_uci()
     print(data.data[1, :], data.target[1])
