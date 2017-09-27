@@ -64,7 +64,7 @@ if __name__ == "__main__":
     ntrain = len(diabetes.target) // 2
 
     # Train an SVM using the training set
-    clf = svm.SVC(C=1000.0)
+    clf = svm.SVC(C=10.0)
     # with C = 10 and C = 100 => same accuracy, different fairness!
     # with C = 1000 => from 76% to 74% in accuracy but fair!
     clf.fit(diabetes.data[:ntrain, :], diabetes.target[:ntrain])
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     print('Accuracy:',  accuracy_score(diabetes.target, pred))
 
     # Fairness measure
-    print(equalized_odds_measure(diabetes, clf, [1]))  # Feature 1 is SEX
+    print(equalized_odds_measure(diabetes, clf, [1], ylabel=1))  # Feature 1 is SEX
 
     # Plot of the FN (PCA)
 #    list_of_errors = [idx for idx in range(len(predictions)) if predictions[idx] != diabetes.target[idx]]

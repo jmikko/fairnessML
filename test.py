@@ -13,7 +13,7 @@ scaler = MinMaxScaler(feature_range=(-1, 1))
 dataset.data = scaler.fit(dataset.data).transform(dataset.data)
 # print(heart.data[1, :], heart.data[2, :], heart.data[3, :])
 # % for train
-ntrain = 3 * len(dataset.target) // 10  # from 30% to 50% the accuracy is the same BUT more fairness!
+ntrain = 5 * len(dataset.target) // 10  # from 30% to 50% the accuracy is the same BUT more fairness!
 
 # Train an SVM using the training set
 clf = svm.SVC(C=1.0)
