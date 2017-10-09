@@ -138,14 +138,45 @@ def load_adult(smaller=False, scaler=True):
         data_test = namedtuple('_', 'data, target')(datamat[len_train:, :-1], target[len_train:])
     return data, data_test
 
+
+def load_adult_race(A1=['white'], smaller=False, scaler=True):
+    # Feature 8 is "race"
+    # race: White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black.
+    data_train, data_test = load_adult(smaller, scaler)
+    A1_val = []
+    race_white_value = data_train.data[0][8]
+    race_black_value = data_train.data[3][8]
+    race_asian_value = data_train.data[11][8]
+    race_amer_value = data_train.data[15][8]
+    race_other_value = data_train.data[50][8]
+    for strings in A1:
+        val = None
+        if strings == 'white':
+            val = race_white_value
+        elif strings == 'black':
+            val = race_black_value
+        elif strings == 'asian':
+            val = race_asian_value
+        elif strings == 'amer-indian':
+            val = race_amer_value
+        elif strings == 'other':
+            val = race_other_value
+        else:
+            print('Error in A1 argument - string not found!')
+            return 0, 0
+        A1_val.append(val)
+
+    for idx in range(len(data_train.data)):
+        data_train.data[idx][8] = 1.0 if data_train.data[idx][8] in A1_val else -1.0
+    for idx in range(len(data_test.data)):
+        data_test.data[idx][8] = 1.0 if data_test.data[idx][8] in A1_val else -1.0
+    return data_train, data_test
+
 if __name__ == "__main__":
 
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
-    data, data_test = load_adult(smaller=False)
-
-#    data_test = namedtuple('_', 'data, target')(np.array(data.data[20000:, :]), data.target[20000:])
-#    data = namedtuple('_', 'data, target')(np.array(data.data[:20000, :]), data.target[:20000])
+    data, data_test = load_adult_race(smaller=False)
 
     print('Train examples #', len(data.target), 'pos | neg :', len([0.0 for val in data.target if val == 1]), '|', len([0.0 for val in data.target if val == -1]))
     print('Test examples #', len(data_test.target), 'pos | neg :', len([0.0 for val in data_test.target if val == 1]), '|', len([0.0 for val in data_test.target if val == -1]))

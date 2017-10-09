@@ -6,6 +6,7 @@ from measures import equalized_odds_measure_TP, equalized_odds_measure_FP, equal
 import matplotlib.pyplot as plt
 from sklearn.model_selection import GridSearchCV
 from scipy.optimize import linprog
+from sklearn.metrics import accuracy_score
 
 
 class HardtMethod:
@@ -16,31 +17,30 @@ class HardtMethod:
         self.theta_11, self.theta_01, self.theta_10, self.theta_00 = None, None, None, None
         self.alpha1, self.alpha2, self.alpha3, self.alpha4 = None, None, None, None
 
-    @staticmethod
-    def y_tilde(pred, A):
+    def y_tilde(self, pred, A):
         if pred == 1:
             if A == 1:
                 rand = np.random.random()
-                if rand < theta_11:
+                if rand < self.theta_11:
                     return pred
                 else:
                     return pred * -1
             else:
                 rand = np.random.random()
-                if rand < theta_10:
+                if rand < self.theta_10:
                     return pred
                 else:
                     return pred * -1
         else:
             if A == 1:
                 rand = np.random.random()
-                if rand < theta_01:
+                if rand < self.theta_01:
                     return pred
                 else:
                     return pred * -1
             else:
                 rand = np.random.random()
-                if rand < theta_00:
+                if rand < self.theta_00:
                     return pred
                 else:
                     return pred * -1
@@ -51,6 +51,8 @@ class HardtMethod:
         return self.y_tilde(example, prediction)
 
     def fit(self):
+        ntrain = len(self.dataset.target)
+        pred_train = self.model.predict(self.dataset.data)
         sensible_feature = self.sensible_feature
         dataset_train = self.dataset
 
@@ -139,7 +141,9 @@ class HardtMethod:
                          # - psi_hat_010,
                          - psi_hat_011
                          ])
-        res = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds=None, method='simplex', callback=None, options=None)
+
+        options = {'disp':True}
+        res = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds=None, method='simplex', callback=None, options=options)
         self.theta_11, self.theta_01, self.theta_10, self.theta_00, \
                                                             self.alpha1, self.alpha2, self.alpha3, self.alpha4 = res.x
         return res
@@ -155,34 +159,20 @@ def gamma_y_hat(data, model, sensible_features, ylabel, rev_pred=1):
 
 
 if __name__ == "__main__":
-    from load_data import load_binary_diabetes_uci, load_heart_uci, load_breast_cancer, load_adult
+    from load_data import load_binary_diabetes_uci
     from sklearn import svm
     from sklearn.metrics import accuracy_score
 
-    experiment_number = 2
-    if experiment_number == 0:
-        dataset_train = load_binary_diabetes_uci()
-        dataset_test = load_binary_diabetes_uci()
-        sensible_feature = 1  # sex
-    elif experiment_number == 1:
-        dataset_train = load_heart_uci()
-        dataset_test = load_heart_uci()
-        sensible_feature = 1  # sex
-    elif 2:
-        dataset_train, dataset_test = load_adult(smaller=False)
-        sensible_feature = 9  # sex
-        print('Different values of the sensible feature', sensible_feature, ':', set(dataset_train.data[:,sensible_feature]))
+    dataset_train = load_binary_diabetes_uci()
+    dataset_test = load_binary_diabetes_uci()
+    sensible_feature = 1  # sex
 
-    if experiment_number in [0, 1]:
-        # % for train
-        ntrain = 5 * len(dataset_train.target) // 10
-        # The dataset becomes the test set
-        dataset_train.data = dataset_train.data[:ntrain, :]
-        dataset_train.target = dataset_train.target[:ntrain]
-        dataset_test.data = dataset_test.data[ntrain:, :]
-        dataset_test.target = dataset_test.target[ntrain:]
-    if experiment_number == 2:
-        ntrain = len(dataset_test.target)
+
+    ntrain = 5 * len(dataset_train.target) // 10
+    dataset_train.data = dataset_train.data[:ntrain, :]
+    dataset_train.target = dataset_train.target[:ntrain]
+    dataset_test.data = dataset_test.data[ntrain:, :]
+    dataset_test.target = dataset_test.target[ntrain:]
 
     # Train an SVM using the training set
     print('Grid search...')
