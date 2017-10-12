@@ -10,7 +10,7 @@ from hardt import gamma_y_hat, HardtMethod
 from scipy.spatial import ConvexHull
 
 
-experiment_number = 3
+experiment_number = 2
 if experiment_number == 0:
     dataset_train = load_binary_diabetes_uci()
     dataset_test = load_binary_diabetes_uci()
@@ -42,7 +42,7 @@ if experiment_number in [2, 3]:
 
 # Train an SVM using the training set
 print('Grid search...')
-grid_search_complete = 0
+grid_search_complete = 1
 if grid_search_complete:
     param_grid = [
         {'C': [0.1, 0.5, 1, 10, 100, 1000], 'kernel': ['linear']},
