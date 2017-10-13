@@ -11,7 +11,7 @@ from scipy.spatial import ConvexHull
 from collections import namedtuple
 
 
-experiment_number = 2
+experiment_number = 0
 if experiment_number == 0:
     dataset_train = load_binary_diabetes_uci()
     dataset_test = load_binary_diabetes_uci()
@@ -53,7 +53,7 @@ if grid_search_complete:
 else:
     param_grid = [{'C': [10.0], 'kernel': ['linear'], 'gamma': ['auto']}]
 svc = svm.SVC()
-clf = GridSearchCV(svc, param_grid, n_jobs=3)
+clf = GridSearchCV(svc, param_grid, n_jobs=1)
 clf.fit(dataset_train.data, dataset_train.target)
 print('Y:', clf.best_estimator_)
 
@@ -118,7 +118,7 @@ if grid_search_complete:
 else:
     param_grid = [{'C': [10.0], 'kernel': ['linear'], 'gamma': ['auto']}]
 svc = svm.SVC()
-clf = GridSearchCV(svc, param_grid, n_jobs=3)
+clf = GridSearchCV(svc, param_grid, n_jobs=1)
 clf.fit(dataset_train.data, dataset_train.target)
 print('Y fair:', clf.best_estimator_)
 
