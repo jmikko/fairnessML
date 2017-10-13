@@ -5,7 +5,6 @@ sys.path.append('../../fair_classification/')  # the code for fair classificatio
 import utils as ut
 import loss_funcs as lf  # loss funcs that can be optimized subject to various constraints
 
-
 NUM_FOLDS = 10  # we will show 10-fold cross validation accuracy as a performance measure
 
 
