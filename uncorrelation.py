@@ -23,7 +23,7 @@ class UncorrelationMethod:
         self.u = None
 
     def new_representation(self, examples):
-        if self.u == None:
+        if self.u is None:
             print('Model not trained yet!')
             return 0
         new_examples = np.array([ex if ex[sensible_feature] == self.val0 else ex - self.u for ex in examples])
@@ -31,7 +31,7 @@ class UncorrelationMethod:
         return new_examples
 
     def predict(self, examples):
-        if self.u == None:
+        if self.u is None:
             print('Model not trained yet!')
             return 0
         new_examples = np.array([ex if ex[sensible_feature] == self.val0 else ex - self.u for ex in examples])
