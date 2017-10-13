@@ -1,7 +1,7 @@
 import os, sys
 import numpy as np
 from generate_synthetic_data import *
-sys.path.append('../../fair_classification/')  # the code for fair classification is in this directory
+sys.path.append('..\\..\\fair_classification\\')  # the code for fair classification is in this directory
 import utils as ut
 import loss_funcs as lf  # loss funcs that can be optimized subject to various constraints
 
@@ -10,6 +10,7 @@ NUM_FOLDS = 10  # we will show 10-fold cross validation accuracy as a performanc
 
 def test_synthetic_data():
     """ Generate the synthetic data """
+    print(sys.path)
     X, y, x_control = generate_synthetic_data(plot_data=False)
     ut.compute_p_rule(x_control["s1"], y)  # compute the p-rule in the original data
 
@@ -42,9 +43,5 @@ def test_synthetic_data():
                                         apply_accuracy_constraint, sep_constraint, ['s1'])
 
 
-def main():
-    test_synthetic_data()
-
-
 if __name__ == '__main__':
-    main()
+    test_synthetic_data()
