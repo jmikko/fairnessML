@@ -142,7 +142,7 @@ class HardtMethod:
                          - psi_hat_011
                          ])
 
-        options = {'disp':True}
+        options = {'disp':False}
         res = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds=None, method='simplex', callback=None, options=options)
         self.theta_11, self.theta_01, self.theta_10, self.theta_00, \
                                                             self.alpha1, self.alpha2, self.alpha3, self.alpha4 = res.x

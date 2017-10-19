@@ -94,7 +94,7 @@ def generate_synthetic_data(data_type, plot_data=False):
     x_control = np.hstack((z1, z2, z3, z4))
 
     # shuffle the data
-    perm = range(len(X))
+    perm = list(range(len(X)))
     shuffle(perm)
     X = X[perm]
     y = y[perm]

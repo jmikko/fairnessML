@@ -14,8 +14,8 @@ from collections import namedtuple
 class UncorrelationMethod:
     def __init__(self, dataset, model, sensible_feature):
         self.dataset = dataset
-        self.values_of_sensible_feature = list(set(dataset_train.data[:, sensible_feature]))
-        self.list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
+        self.values_of_sensible_feature = list(set(dataset.data[:, sensible_feature]))
+        self.list_of_sensible_feature_train = dataset.data[:, sensible_feature]
         self.val0 = np.min(self.values_of_sensible_feature)
         self.val1 = np.max(self.values_of_sensible_feature)
         self.model = model
@@ -26,26 +26,26 @@ class UncorrelationMethod:
         if self.u is None:
             print('Model not trained yet!')
             return 0
-        new_examples = np.array([ex if ex[sensible_feature] == self.val0 else ex - self.u for ex in examples])
-        new_examples = np.delete(new_examples, sensible_feature, 1)
+        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in examples])
+        new_examples = np.delete(new_examples, self.sensible_feature, 1)
         return new_examples
 
     def predict(self, examples):
         if self.u is None:
             print('Model not trained yet!')
             return 0
-        new_examples = np.array([ex if ex[sensible_feature] == self.val0 else ex - self.u for ex in examples])
-        new_examples = np.delete(new_examples, sensible_feature, 1)
+        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in examples])
+        new_examples = np.delete(new_examples, self.sensible_feature, 1)
         prediction = self.model.predict(new_examples)
         return prediction
 
     def fit(self):
         tmp = [ex for idx, ex in enumerate(self.dataset.data)
-               if self.dataset.target[idx] == 1 and ex[sensible_feature] == self.val1]
+               if self.dataset.target[idx] == 1 and ex[self.sensible_feature] == self.val1]
         average_A_1 = np.mean(tmp, 0)
         n_A_1 = len(tmp)
         tmp = [ex for idx, ex in enumerate(self.dataset.data)
-               if self.dataset.target[idx] == 1 and ex[sensible_feature] == self.val0]
+               if self.dataset.target[idx] == 1 and ex[self.sensible_feature] == self.val0]
         average_not_A_1 = np.mean(tmp, 0)
         n_not_A_1 = len(tmp)
 
@@ -57,9 +57,9 @@ class UncorrelationMethod:
         #  print(u)
         #  print(u[sensible_feature])
 
-        newdata = np.array([ex if ex[sensible_feature] == self.val0 else ex - self.u for ex in self.dataset.data])
+        newdata = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in self.dataset.data])
         #  newdata = map(lambda x: x - u, dataset_train.data)
-        newdata = np.delete(newdata, sensible_feature, 1)
+        newdata = np.delete(newdata, self.sensible_feature, 1)
         #  print(newdata.shape)
         self.dataset = namedtuple('_', 'data, target')(newdata, self.dataset.target)
 
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     if grid_search_complete:
         param_grid = [
             {'C': [0.1, 0.5, 1, 10, 100, 1000], 'kernel': ['linear']},
-            {'C': [0.1, 0.5, 1, 10, 100, 1000], 'gamma': ['auto', 0.001, 0.0001], 'kernel': ['rbf']},
+            #{'C': [0.1, 0.5, 1, 10, 100, 1000], 'gamma': ['auto', 0.001, 0.0001], 'kernel': ['rbf']},
         ]
     else:
         param_grid = [{'C': [10.0], 'kernel': ['linear'], 'gamma': ['auto']}]

@@ -49,7 +49,7 @@ def load_binary_diabetes_uci():
     '''
     dataset = sklearn.datasets.load_diabetes()
     # Make the target binary: high progression Vs. low progression of the disease
-    dataset.target = [1 if diabetes_progression > 139 else -1 for diabetes_progression in dataset.target]
+    dataset.target = np.array([1 if diabetes_progression > 139 else -1 for diabetes_progression in dataset.target])
     return dataset
 
 
