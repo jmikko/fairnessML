@@ -77,7 +77,7 @@ def equalized_odds_measure_FP(data, model, sensible_features, ylabel, rev_pred=1
     return eq_dict
 
 
-# TODO: questo non so se sia giusto!!
+# TODO: check this
 def false_omission_rate(data, model, sensible_features, ylabel):
     predictions = model.predict(data.data)
     truth = data.target

@@ -12,7 +12,7 @@ from uncorrelation import UncorrelationMethod
 from uncorrelation_nonlinear import Fair_SVM, polynomial_kernel, gaussian_kernel, linear_kernel
 import os, sys
 import numpy as np
-
+from collections import namedtuple
 sys.path.insert(0, './zafar_methods/fair_classification/')  # the code for fair classification is in this directory
 #from generate_synthetic_data import *
 import utils as ut
@@ -24,13 +24,13 @@ import matplotlib.pyplot as plt  # for plotting stuff
 
 
 # Experimental settings
-experiment_number = 2
+experiment_number = 4
 verbose = 3
 
 number_of_iterations = 30
 
 linear = True
-not_linear = True
+not_linear = False
 
 grid_search_complete = 1
 if grid_search_complete:
@@ -94,6 +94,13 @@ for iteration in range(number_of_iterations):
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 4:
+        print('Loading adult (gender) dataset by splitting the training data...')
+        dataset_train, _ = load_adult(smaller=False)
+        sensible_feature = 9  # sex
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
 
     if experiment_number in [0, 1]:
         # % for train
@@ -110,6 +117,18 @@ for iteration in range(number_of_iterations):
     if experiment_number in [2, 3]:
         ntrain = len(dataset_test.target)
         ntest = len(dataset_train.target) - ntrain
+    if experiment_number in [4]:
+        # % for train
+        ntrain = 8 * len(dataset_train.target) // 10
+        ntest = len(dataset_train.target) - ntrain
+        permutation = list(range(len(dataset_train.target)))
+        np.random.shuffle(permutation)
+        train_idx = permutation[:ntrain]
+        test_idx = permutation[ntrain:]
+        dataset_test = namedtuple('_', 'data, target')(dataset_train.data[test_idx, :], dataset_train.target[test_idx])
+        dataset_train = namedtuple('_', 'data, target')(dataset_train.data[train_idx, :], dataset_train.target[train_idx])
+
+
 
     if verbose >= 1 and iteration == 0:
         print('Training examples:', ntrain)
