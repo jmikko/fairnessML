@@ -50,11 +50,15 @@ def load_binary_diabetes_uci():
     dataset = sklearn.datasets.load_diabetes()
     # Make the target binary: high progression Vs. low progression of the disease
     dataset.target = np.array([1 if diabetes_progression > 139 else -1 for diabetes_progression in dataset.target])
+    val0 = np.min(dataset.data[0, 1])
+    dataset.data[:, 1] = [0 if val == val0 else 1 for val in dataset.data[:, 1]]
     return dataset
 
 
 def load_breast_cancer():
-    return sklearn.datasets.load_breast_cancer()
+    dataset = sklearn.datasets.load_breast_cancer()
+    # dataset.target = [y for y in dataset.target]
+    return dataset
 
 
 def load_adult(smaller=False, scaler=True):

@@ -74,7 +74,6 @@ def train_model_disp_mist(x, y, x_control, loss_function, EPS, cons_params=None)
         # constructing the logistic loss problem
         loss = sum_entries(  logistic( mul_elemwise(-y, x*w) )  ) / num_points # we are converting y to a diagonal matrix for consistent
 
-
     # sometimes, its a good idea to give a starting point to the constrained solver
     # this starting point for us is the solution to the unconstrained optimization problem
     # another option of starting point could be any feasible solution
@@ -167,12 +166,12 @@ def get_clf_stats(w, x_train, y_train, x_control_train, x_test, y_test, x_contro
         cov_all_train[s_attr] = get_sensitive_attr_constraint_fpr_fnr_cov(None, x_train, y_train, distances_boundary_train, x_control_train[s_attr]) 
         
 
-        print("\n")
-        print("Accuracy: %0.3f" % (test_score))
-        print_stats = True # only print stats for the test fold
+        #print("\n")
+        #print("Accuracy: %0.3f" % (test_score))
+        print_stats = False  # only print stats for the test fold
         s_attr_to_fp_fn_test = get_fpr_fnr_sensitive_features(y_test, all_class_labels_assigned_test, x_control_test, sensitive_attrs, print_stats)
         cov_all_test[s_attr] = get_sensitive_attr_constraint_fpr_fnr_cov(None, x_test, y_test, distances_boundary_test, x_control_test[s_attr]) 
-        print("\n")
+        #print("\n")
 
     return train_score, test_score, cov_all_train, cov_all_test, s_attr_to_fp_fn_train, s_attr_to_fp_fn_test
 
@@ -304,10 +303,10 @@ def get_fpr_fnr_sensitive_features(y_true, y_pred, x_control, sensitive_attrs, v
             all_neg = sum(y_true_local == -1.0)
             all_pos = sum(y_true_local == +1.0)
 
-            fpr = float(fp) / float(fp + tn)
-            fnr = float(fn) / float(fn + tp)
-            tpr = float(tp) / float(tp + fn)
-            tnr = float(tn) / float(tn + fp)
+            fpr = 0.0 if float(fp + tn) == 0 else float(fp) / float(fp + tn)
+            fnr = 0.0 if float(fn + tp) == 0 else float(fn) / float(fn + tp)
+            tpr = 0.0 if float(tp + fn) == 0 else float(tp) / float(tp + fn)
+            tnr = 0.0 if float(tn + fp) == 0 else float(tn) / float(tn + fp)
 
 
             s_attr_to_fp_fn[s][s_val]["fp"] = fp
@@ -368,6 +367,7 @@ def get_sensitive_attr_constraint_fpr_fnr_cov(model, x_arr, y_arr_true, y_arr_di
 
     for v in set(x_control_arr):
         s_val_to_total[v] = sum(x_control_arr == v)
+        # print(v)
 
     s_val_to_avg[0] = s_val_to_total[1] / float(s_val_to_total[0] + s_val_to_total[1]) # A_0 in our formulation
     s_val_to_avg[1] = 1.0 - ( s_val_to_total[1] / float(s_val_to_total[0] + s_val_to_total[1]) ) # A_1 in our formulation

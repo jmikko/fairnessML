@@ -70,7 +70,8 @@ class Fair_SVM(BaseEstimator):
 
         P = cvxopt.matrix(np.outer(y, y) * K)
         q = cvxopt.matrix(np.ones(n_samples) * -1)
-        A = cvxopt.matrix(y, (1, n_samples), 'd')
+        # print(y)
+        A = cvxopt.matrix(y.astype(np.double), (1, n_samples), 'd')
         b = cvxopt.matrix(0.0)
 
         if self.C is None:
