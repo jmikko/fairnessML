@@ -1,5 +1,6 @@
 from load_data import load_binary_diabetes_uci, load_heart_uci, load_breast_cancer,\
-    load_adult, load_adult_race, load_adult_race_white_vs_black, laod_propublica_fairml, laod_propublica_fairml_race
+    load_adult, load_adult_race, load_adult_race_white_vs_black, laod_propublica_fairml, laod_propublica_fairml_race,\
+    laod_propublica_fairml_hotencoded, load_default
 from sklearn import svm
 import numpy as np
 from measures import equalized_odds_measure_TP, equalized_odds_measure_FP, equalized_odds_measure_from_pred_TP, equalized_odds_measure_TP_from_list_of_sensfeat
@@ -64,8 +65,8 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 
 # Experimental settings
-experiment_number = 7
-smaller_option = False
+experiment_number = 10
+smaller_option = True
 accuracy_balanced = False
 verbose = 3
 
@@ -79,11 +80,11 @@ not_linear = False
 grid_search_complete = True
 if grid_search_complete:
     param_grid_linear = [
-        {'C': [0.001, 0.01, 0.1, 0.5, 1, 10, 100], 'kernel': ['linear']}
+        {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'kernel': ['linear']}
     ]
     param_grid_all = [
-        {'C': [0.1, 0.5, 1, 10, 100], 'kernel': ['linear']},
-        {'C': [0.1, 0.5, 1, 10, 100], 'gamma': [0.1, 0.01], 'kernel': ['rbf']},
+        {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'kernel': ['linear']},
+        {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'gamma': [0.1, 0.01], 'kernel': ['rbf']},
     ]
 else:
     print('---> No grid search performed! <---')
@@ -91,7 +92,7 @@ else:
     param_grid_all = [{'C': [10.0], 'kernel': ['rbf'], 'gamma': [0.4]}]
 
 if smaller_option:
-    print('---> A smaller dataset is loaded <---')
+    print('---> A smaller dataset could be loaded <---')
 
 if accuracy_balanced:
     accuracy_score = balanced_accuracy_score
@@ -169,16 +170,30 @@ for iteration in range(number_of_iterations):
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 7:
-        print('Loading propublica_fairml (gender) dataset...')
+        print('Loading propublica_fairml (gender) dataset with race not hotencoded...')
         dataset_train = laod_propublica_fairml()
         sensible_feature = 4  # gender
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 8:
-        print('Loading propublica_fairml (black vs other races) dataset...')
+        print('Loading propublica_fairml (black vs other races) dataset with race not hotencoded...')
         dataset_train = laod_propublica_fairml_race()
         sensible_feature = 5  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 9:
+        print('Loading propublica_fairml (gender) dataset with race hotencoded...')
+        dataset_train = laod_propublica_fairml_hotencoded()
+        sensible_feature = 10  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 10:
+        print('Loading Default (gender) dataset [other categoricals are removed!]...')
+        dataset_train = load_default(remove_categorical=True, smaller=True, scaler=True)
+        sensible_feature = 1  # gender
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
@@ -198,7 +213,7 @@ for iteration in range(number_of_iterations):
     if experiment_number in [2, 3]:
         ntrain = len(dataset_train.target)
         ntest = len(dataset_test.target)
-    if experiment_number in [4, 5, 6, 7, 8]:
+    if experiment_number in [4, 5, 6, 7, 8, 9, 10]:
         # % for train
         ntrain = 8 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
@@ -260,7 +275,7 @@ for iteration in range(number_of_iterations):
 
         if verbose >= 2:
             if res.status == 0:
-                print('Thetas [prob. to flip predicion] y1A1, y0A1, y1A0, y0A0:', res.x[:4])
+                print('Thetas [prob. of NOT changing the prediction] y1A1, y0A1, y1A0, y0A0:', res.x[:4])
                 print('Alphas:', res.x[4:])
             else:
                 print('res.x:', res.x)

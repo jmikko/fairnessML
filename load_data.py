@@ -239,6 +239,11 @@ def laod_propublica_fairml_hotencoded():
     # quick data processing
     compas_rating = propublica_data.score_factor.values
     propublica_data = propublica_data.drop("score_factor", 1)
+
+    newFemale = [val if val == 1.0 else -1.0 for val in propublica_data.Female.values]
+    propublica_data = propublica_data.drop("Female", 1)
+    propublica_data.insert(10, 'Female', newFemale)
+
     dataset = namedtuple('_', 'data, target')(np.array(propublica_data.values), np.array(compas_rating))
     return dataset
 
@@ -296,8 +301,47 @@ def laod_propublica_fairml_race(A1=[1]):
         dataset.data[idx][6] = 1.0 if dataset.data[idx][6] in A1 else -1.0
     return dataset
 
-if __name__ == "__main__":
+def load_default(remove_categorical=False, smaller=False, scaler=True):
+    '''
+        0. X1: Amount of the given credit (NT dollar): it includes both the individual consumer credit and his/her family (supplementary) credit.
+        1. X2: Gender (1 = male; 2 = female).
+        2. X3: Education (1 = graduate school; 2 = university; 3 = high school; 4 = others).
+        3. X4: Marital status (1 = married; 2 = single; 3 = others).
+        4. X5: Age (year).
+        5 - 10. X6 - X11: History of past payment. We tracked the past monthly payment records (from April to September, 2005) as follows: X6 = the repayment status in September, 2005; X7 = the repayment status in August, 2005; . . .;X11 = the repayment status in April, 2005. The measurement scale for the repayment status is: -1 = pay duly; 1 = payment delay for one month; 2 = payment delay for two months; . . .; 8 = payment delay for eight months; 9 = payment delay for nine months and above.
+        11 - 16. X12-X17: Amount of bill statement (NT dollar). X12 = amount of bill statement in September, 2005; X13 = amount of bill statement in August, 2005; . . .; X17 = amount of bill statement in April, 2005.
+        17 - 22. X18-X23: Amount of previous payment (NT dollar). X18 = amount paid in September, 2005; X19 = amount paid in August, 2005; . . .;X23 = amount paid in April, 2005.
+        target: Y = default payment next month (+1 or -1)
+    '''
+    dataset = pd.read_excel("./default_credit_card_clients.xls")
+    # dataset = dataset.drop("ID", 1)
+    default_payment = dataset.Y.values
+    dataset = dataset.drop("Y", 1)
 
+    default_payment = default_payment[1:]
+    default_payment = np.array([el if el == 1.0 else -1.0 for el in default_payment])
+
+    if remove_categorical:
+        dataset = dataset.drop("X3", 1)
+        dataset = dataset.drop("X4", 1)
+
+    if scaler:
+        scaler = StandardScaler()
+        scaler.fit(np.array(dataset.values[1:, :], dtype=np.float))
+        dataset = scaler.transform(dataset.values[1:, :])
+
+    if smaller:
+        all_idxs = list(range(len(default_payment)))
+        np.random.shuffle(all_idxs)
+        selected_idxs = all_idxs[:2000]
+
+        dataset = namedtuple('_', 'data, target')(dataset[selected_idxs, :], default_payment[selected_idxs])
+    else:
+        dataset = namedtuple('_', 'data, target')(dataset, default_payment)
+    return dataset
+
+if __name__ == "__main__":
+    load_default()
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)

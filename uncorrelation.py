@@ -58,7 +58,7 @@ class UncorrelationMethod:
         #  print(u[sensible_feature])
 
         newdata = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in self.dataset.data])
-        #  newdata = map(lambda x: x - u, dataset_train.data)
+        #  newdata = map(lambda x: x + u, dataset_train.data)
         newdata = np.delete(newdata, self.sensible_feature, 1)
         #  print(newdata.shape)
         self.dataset = namedtuple('_', 'data, target')(newdata, self.dataset.target)

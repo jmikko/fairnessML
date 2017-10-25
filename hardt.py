@@ -18,29 +18,30 @@ class HardtMethod:
         self.alpha1, self.alpha2, self.alpha3, self.alpha4 = None, None, None, None
 
     def y_tilde(self, pred, A):
+        pred = float(pred[0])
         if pred == 1:
             if A == 1:
                 rand = np.random.random()
-                if rand < self.theta_11:
+                if rand <= self.theta_11:
                     return pred
                 else:
                     return pred * -1
             else:
                 rand = np.random.random()
-                if rand < self.theta_10:
+                if rand <= self.theta_10:
                     return pred
                 else:
                     return pred * -1
         else:
             if A == 1:
                 rand = np.random.random()
-                if rand < self.theta_01:
+                if rand <= self.theta_01:
                     return pred
                 else:
                     return pred * -1
             else:
                 rand = np.random.random()
-                if rand < self.theta_00:
+                if rand <= self.theta_00:
                     return pred
                 else:
                     return pred * -1
@@ -142,7 +143,7 @@ class HardtMethod:
                          - psi_hat_011
                          ])
 
-        options = {'disp':False}
+        options = {'disp': False}
         res = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds=None, method='simplex', callback=None, options=options)
         self.theta_11, self.theta_01, self.theta_10, self.theta_00, \
                                                             self.alpha1, self.alpha2, self.alpha3, self.alpha4 = res.x
