@@ -1,6 +1,6 @@
-from load_data import load_binary_diabetes_uci, load_heart_uci, load_breast_cancer, load_adult, load_adult_race
+from load_data import load_binary_diabetes_uci, load_heart_uci, load_breast_cancer,\
+    load_adult, load_adult_race, load_adult_race_white_vs_black, laod_propublica_fairml, laod_propublica_fairml_race
 from sklearn import svm
-from sklearn.metrics import accuracy_score
 import numpy as np
 from measures import equalized_odds_measure_TP, equalized_odds_measure_FP, equalized_odds_measure_from_pred_TP, equalized_odds_measure_TP_from_list_of_sensfeat
 import matplotlib.pyplot as plt
@@ -13,37 +13,90 @@ from uncorrelation_nonlinear import Fair_SVM, polynomial_kernel, gaussian_kernel
 import os, sys
 import numpy as np
 from collections import namedtuple
-sys.path.insert(0, './zafar_methods/fair_classification/')  # the code for fair classification is in this directory
-#from generate_synthetic_data import *
-import utils as ut
-import funcs_disp_mist as fdm
-import loss_funcs as lf  # loss funcs that can be optimized subject to various constraints
 #import plot_syn_boundaries as psb
 from copy import deepcopy
 import matplotlib.pyplot as plt  # for plotting stuff
+from sklearn.metrics import recall_score
+from sklearn.metrics.classification import _check_targets
+
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
+
+
+def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
+    """Compute the balanced accuracy
+    The balanced accuracy is used in binary classification problems to deal
+    with imbalanced datasets. It is defined as the arithmetic mean of
+    sensitivity (true positive rate) and specificity (true negative rate),
+    or the average recall obtained on either class. It is also equal to the
+    ROC AUC score given binary inputs.
+    The best value is 1 and the worst value is 0.
+    Read more in the :ref:`User Guide <balanced_accuracy_score>`.
+    Parameters
+    ----------
+    y_true : 1d array-like
+        Ground truth (correct) target values.
+    y_pred : 1d array-like
+        Estimated targets as returned by a classifier.
+    sample_weight : array-like of shape = [n_samples], optional
+        Sample weights.
+    Returns
+    -------
+    balanced_accuracy : float.
+        The average of sensitivity and specificity
+    y_type, y_true, y_pred = _check_targets(y_true, y_pred)
+    """
+    y_type, y_true, y_pred = _check_targets(y_true, y_pred)
+    if y_type != 'binary':
+        raise ValueError('Balanced accuracy is only meaningful '
+                         'for binary classification problems.')
+    # simply wrap the ``recall_score`` function
+    return recall_score(y_true, y_pred,
+                        pos_label=None,
+                        average='macro',
+                        sample_weight=sample_weight)
+
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------- #
+
 
 
 # Experimental settings
-experiment_number = 4
+experiment_number = 7
+smaller_option = False
+accuracy_balanced = False
 verbose = 3
 
 number_of_iterations = 30
 
 linear = True
+zafar = False
 not_linear = False
 
-grid_search_complete = 1
+
+grid_search_complete = True
 if grid_search_complete:
     param_grid_linear = [
-        {'C': [0.1, 0.5, 1, 10, 100], 'kernel': ['linear']}
+        {'C': [0.001, 0.01, 0.1, 0.5, 1, 10, 100], 'kernel': ['linear']}
     ]
     param_grid_all = [
         {'C': [0.1, 0.5, 1, 10, 100], 'kernel': ['linear']},
         {'C': [0.1, 0.5, 1, 10, 100], 'gamma': [0.1, 0.01], 'kernel': ['rbf']},
     ]
 else:
-    param_grid_linear = [{'C': [10.0], 'kernel': ['linear']}]
+    print('---> No grid search performed! <---')
+    param_grid_linear = [{'C': [0.1], 'kernel': ['linear']}]
     param_grid_all = [{'C': [10.0], 'kernel': ['rbf'], 'gamma': [0.4]}]
+
+if smaller_option:
+    print('---> A smaller dataset is loaded <---')
+
+if accuracy_balanced:
+    accuracy_score = balanced_accuracy_score
+else:
+    from sklearn.metrics import accuracy_score
 
 # ********************************************************************************************
 
@@ -82,22 +135,50 @@ for iteration in range(number_of_iterations):
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 2:
         print('Loading adult (gender) dataset...')
-        dataset_train, dataset_test = load_adult(smaller=False)
+        dataset_train, dataset_test = load_adult(smaller=smaller_option)
         sensible_feature = 9  # sex
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 3:
         print('Loading adult (white vs. other races) dataset...')
-        dataset_train, dataset_test = load_adult_race(smaller=False)
+        dataset_train, dataset_test = load_adult_race(smaller=smaller_option)
         sensible_feature = 8  # race
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 4:
         print('Loading adult (gender) dataset by splitting the training data...')
-        dataset_train, _ = load_adult(smaller=False)
+        dataset_train, _ = load_adult(smaller=smaller_option)
         sensible_feature = 9  # sex
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 5:
+        print('Loading adult (white vs. other races)  dataset by splitting the training data...')
+        dataset_train, _ = load_adult_race(smaller=smaller_option)
+        sensible_feature = 8  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 6:
+        print('Loading adult (white vs. black)  dataset by splitting the training data...')
+        dataset_train, _ = load_adult_race_white_vs_black(smaller=smaller_option)
+        sensible_feature = 8  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 7:
+        print('Loading propublica_fairml (gender) dataset...')
+        dataset_train = laod_propublica_fairml()
+        sensible_feature = 4  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 8:
+        print('Loading propublica_fairml (black vs other races) dataset...')
+        dataset_train = laod_propublica_fairml_race()
+        sensible_feature = 5  # race
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
@@ -115,9 +196,9 @@ for iteration in range(number_of_iterations):
         dataset_test.data = dataset_test.data[test_idx, :]
         dataset_test.target = dataset_test.target[test_idx]
     if experiment_number in [2, 3]:
-        ntrain = len(dataset_test.target)
-        ntest = len(dataset_train.target) - ntrain
-    if experiment_number in [4]:
+        ntrain = len(dataset_train.target)
+        ntest = len(dataset_test.target)
+    if experiment_number in [4, 5, 6, 7, 8]:
         # % for train
         ntrain = 8 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
@@ -128,12 +209,21 @@ for iteration in range(number_of_iterations):
         dataset_test = namedtuple('_', 'data, target')(dataset_train.data[test_idx, :], dataset_train.target[test_idx])
         dataset_train = namedtuple('_', 'data, target')(dataset_train.data[train_idx, :], dataset_train.target[train_idx])
 
-
-
     if verbose >= 1 and iteration == 0:
         print('Training examples:', ntrain)
         print('Test examples:', ntest)
         print('Number of features:', len(dataset_train.data[1, :]))
+        values_of_sensible_feature = list(set(dataset_train.data[:, sensible_feature]))
+        val0 = np.min(values_of_sensible_feature)
+        val1 = np.max(values_of_sensible_feature)
+        print('Examples in training in the first group:', len([el for el in dataset_train.data if el[sensible_feature] == val1]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_train.data) if el[sensible_feature] == val1 and dataset_train.target[idx] == 1]))
+        print('Examples in training in the second group:', len([el for el in dataset_train.data if el[sensible_feature] == val0]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_train.data) if el[sensible_feature] == val0 and dataset_train.target[idx] == 1]))
+        print('Examples in test in the first group:', len([el for el in dataset_test.data if el[sensible_feature] == val1]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_test.data) if el[sensible_feature] == val1 and dataset_test.target[idx] == 1]))
+        print('Examples in test in the second group:', len([el for el in dataset_test.data if el[sensible_feature] == val0]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_test.data) if el[sensible_feature] == val0 and dataset_test.target[idx] == 1]))
 
     if linear:
         # Train an SVM using the training set
@@ -170,7 +260,7 @@ for iteration in range(number_of_iterations):
 
         if verbose >= 2:
             if res.status == 0:
-                print('Thetas:', res.x[:4])
+                print('Thetas [prob. to flip predicion] y1A1, y0A1, y1A0, y0A0:', res.x[:4])
                 print('Alphas:', res.x[4:])
             else:
                 print('res.x:', res.x)
@@ -393,8 +483,17 @@ for iteration in range(number_of_iterations):
         eq_opp_train['ourK'].append(np.abs(list(eqopptrain[0].values())[0] - list(eqopptrain[0].values())[1]))
         eq_opp_test['ourK'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
 
+        sys.path.insert(0,
+                        './zafar_methods/fair_classification/')  # the code for fair classification is in this directory
 
+    if zafar:
         # Zafar
+
+        # from generate_synthetic_data import *
+        import utils as ut
+        import funcs_disp_mist as fdm
+        import loss_funcs as lf  # loss funcs that can be optimized subject to various constraints
+
         print('\nZafar method...')
         X, y, x_control = dataset_train.data, dataset_train.target, {"s1": dataset_train.data[:, sensible_feature]}
         sensitive_attrs = x_control.keys()
@@ -448,7 +547,7 @@ for iteration in range(number_of_iterations):
         eq_opp_test['zafar'].append(np.abs(s_attr_to_fp_fn_test_cons["s1"][0.0]["fpr"] - s_attr_to_fp_fn_test_cons["s1"][1.0]["fpr"]))
 
     if verbose >= 1 and iteration != number_of_iterations - 1:
-        print('\n\nStats at iteration', iteration)
+        print('\n\nStats at iteration', iteration + 1)
         print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test')
         if linear:
             print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'

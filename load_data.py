@@ -176,6 +176,126 @@ def load_adult_race(A1=['white'], smaller=False, scaler=True):
         data_test.data[idx][8] = 1.0 if data_test.data[idx][8] in A1_val else -1.0
     return data_train, data_test
 
+
+def load_adult_race_white_vs_black(smaller=False, scaler=True, balanced=False):
+    # Feature 8 is "race"
+    # race: White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black.
+    data_train, data_test = load_adult(smaller, scaler)
+    race_white_value = data_train.data[0][8]
+    race_black_value = data_train.data[3][8]
+    race_asian_value = data_train.data[11][8]
+    race_amer_value = data_train.data[15][8]
+    race_other_value = data_train.data[50][8]
+
+    A1_val = race_white_value
+    A0_val = race_black_value
+
+    new_train_data = np.array([el for el in data_train.data if el[8] in [A1_val, A0_val]])
+    new_train_target = np.array([el for idx, el in enumerate(data_train.target) if data_train.data[idx][8] in [A1_val, A0_val]])
+    new_test_data = np.array([el for el in data_test.data if el[8] in [A1_val, A0_val]])
+    new_test_target = np.array([el for idx, el in enumerate(data_test.target) if data_test.data[idx][8] in [A1_val, A0_val]])
+
+    if balanced:
+        idx_white = [idx for idx, el in enumerate(new_train_data) if el[8] == A1_val]
+        idx_black = [idx for idx, el in enumerate(new_train_data) if el[8] == A0_val]
+
+        min_group = np.min([len(idx_white), len(idx_black)])
+
+        idx_white = idx_white[:min_group]
+        idx_black = idx_black[:min_group]
+        idxs = idx_white + idx_black
+
+        data_train = namedtuple('_', 'data, target')(new_train_data[idxs], new_train_target[idxs])
+        data_test = namedtuple('_', 'data, target')(new_test_data, new_test_target)
+    else:
+        data_train = namedtuple('_', 'data, target')(new_train_data, new_train_target)
+        data_test = namedtuple('_', 'data, target')(new_test_data, new_test_target)
+
+    for idx in range(len(data_train.data)):
+        data_train.data[idx][8] = 1.0 if data_train.data[idx][8] == A1_val else -1.0
+    for idx in range(len(data_test.data)):
+        data_test.data[idx][8] = 1.0 if data_test.data[idx][8] == A1_val else -1.0
+    return data_train, data_test
+
+def laod_propublica_fairml_hotencoded():
+    """ Features:
+    0. Two_yr_Recidivism
+    1. Number_of_Priors
+    2. Age_Above_FourtyFive
+    3. Age_Below_TwentyFive
+    4. African_American
+    5. Asian
+    6. Hispanic
+    7. Native_American
+    9. Other
+    10. Female
+    11. Misdemeanor
+
+    Target: score_factor
+    """
+    # read in propublica data
+    propublica_data = pd.read_csv("./"
+                                  "propublica_data_for_fairml.csv")
+    # quick data processing
+    compas_rating = propublica_data.score_factor.values
+    propublica_data = propublica_data.drop("score_factor", 1)
+    dataset = namedtuple('_', 'data, target')(np.array(propublica_data.values), np.array(compas_rating))
+    return dataset
+
+def laod_propublica_fairml():
+    """ Features:
+    0. Two_yr_Recidivism
+    1. Number_of_Priors
+    2. Age_Above_FourtyFive
+    3. Age_Below_TwentyFive
+    4. Female
+    5. Misdemeanor
+    6. Race
+
+    Target: score_factor
+    """
+    dataset = laod_propublica_fairml_hotencoded()
+    # read in propublica data
+    propublica_data = pd.read_csv("./"
+                                  "propublica_data_for_fairml.csv")
+    # quick data processing
+    compas_rating = propublica_data.score_factor.values
+    propublica_data = propublica_data.drop("score_factor", 1)
+
+    black_race_list = propublica_data.African_American.values * 1
+    asian_race_list = propublica_data.Asian.values * 2
+    hispanic_race_list = propublica_data.Hispanic.values * 3
+    native_race_list = propublica_data.Native_American.values * 4
+    other_race_list = propublica_data.Other.values * 5
+
+    feature_race_list = black_race_list + asian_race_list + hispanic_race_list + native_race_list + other_race_list
+
+    propublica_data = propublica_data.drop("African_American", 1)
+    propublica_data = propublica_data.drop("Asian", 1)
+    propublica_data = propublica_data.drop("Hispanic", 1)
+    propublica_data = propublica_data.drop("Native_American", 1)
+    propublica_data = propublica_data.drop("Other", 1)
+
+    propublica_data.insert(6, 'Race', feature_race_list)
+
+    dataset = namedtuple('_', 'data, target')(np.array(propublica_data.values), np.array(compas_rating))
+    return dataset
+
+def laod_propublica_fairml_race(A1=[1]):
+    '''
+    Values of the feature number 6:
+        black_race = 1
+        asian_race = 2
+        hispanic_race = 3
+        native_race = 4
+        other_race = 5
+    '''
+
+    dataset = laod_propublica_fairml()
+    for idx in range(len(dataset.data)):
+        dataset.data[idx][6] = 1.0 if dataset.data[idx][6] in A1 else -1.0
+    return dataset
+
 if __name__ == "__main__":
 
     from sklearn import svm
