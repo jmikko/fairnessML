@@ -66,7 +66,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 # Experimental settings
 experiment_number = 10
-smaller_option = True
+smaller_option = False
 accuracy_balanced = False
 verbose = 3
 
@@ -78,6 +78,7 @@ not_linear = False
 
 
 grid_search_complete = True
+n_jobs = 10
 if grid_search_complete:
     param_grid_linear = [
         {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'kernel': ['linear']}
@@ -192,7 +193,7 @@ for iteration in range(number_of_iterations):
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 10:
         print('Loading Default (gender) dataset [other categoricals are removed!]...')
-        dataset_train = load_default(remove_categorical=True, smaller=True, scaler=True)
+        dataset_train = load_default(remove_categorical=True, smaller=smaller_option, scaler=True)
         sensible_feature = 1  # gender
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
@@ -244,7 +245,7 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Linear SVM...')
         svc = svm.SVC()
-        clf = GridSearchCV(svc, param_grid_linear, n_jobs=3)
+        clf = GridSearchCV(svc, param_grid_linear, n_jobs=n_jobs)
         clf.fit(dataset_train.data, dataset_train.target)
         if verbose >= 3:
             print('Y_hat:', clf.best_estimator_)
@@ -342,7 +343,7 @@ for iteration in range(number_of_iterations):
         print('\nOur uncorrelation method...')
         list_of_sensible_feature_test = dataset_test.data[:, sensible_feature]
         svc = svm.SVC()
-        clf = GridSearchCV(svc, param_grid_linear, n_jobs=1)
+        clf = GridSearchCV(svc, param_grid_linear, n_jobs=n_jobs)
         algorithm = UncorrelationMethod(dataset_train, clf, sensible_feature)
         algorithm.fit()
         if verbose >= 3:
@@ -373,7 +374,7 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Kernel SVM...')
         svc = svm.SVC()
-        clf = GridSearchCV(svc, param_grid_all, n_jobs=3)
+        clf = GridSearchCV(svc, param_grid_all, n_jobs=n_jobs)
         clf.fit(dataset_train.data, dataset_train.target)
         if verbose >= 3:
             print('Y_hat:', clf.best_estimator_)
@@ -475,7 +476,7 @@ for iteration in range(number_of_iterations):
         list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
 
         algorithm = Fair_SVM(sensible_feature=sensible_feature)
-        clf = GridSearchCV(algorithm, param_grid_all, n_jobs=3)
+        clf = GridSearchCV(algorithm, param_grid_all, n_jobs=n_jobs)
         clf.fit(dataset_train.data, dataset_train.target)
         if verbose >= 3:
             print('Our Y:', clf.best_estimator_)
