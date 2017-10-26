@@ -333,7 +333,7 @@ def load_default(remove_categorical=False, smaller=False, scaler=True):
     if smaller:
         all_idxs = list(range(len(default_payment)))
         np.random.shuffle(all_idxs)
-        selected_idxs = all_idxs[:2000]
+        selected_idxs = all_idxs[:10000]
 
         dataset = namedtuple('_', 'data, target')(dataset[selected_idxs, :], default_payment[selected_idxs])
     else:

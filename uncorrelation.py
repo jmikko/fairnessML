@@ -26,7 +26,7 @@ class UncorrelationMethod:
         if self.u is None:
             print('Model not trained yet!')
             return 0
-        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in examples])
+        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in examples])
         new_examples = np.delete(new_examples, self.sensible_feature, 1)
         return new_examples
 
@@ -34,7 +34,7 @@ class UncorrelationMethod:
         if self.u is None:
             print('Model not trained yet!')
             return 0
-        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in examples])
+        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in examples])
         new_examples = np.delete(new_examples, self.sensible_feature, 1)
         prediction = self.model.predict(new_examples)
         return prediction
@@ -53,11 +53,11 @@ class UncorrelationMethod:
         #  print(len(average_A_1), len(average_not_A_1))
         #  print(n_A_1, n_not_A_1, N_1)
 
-        self.u = (average_A_1 - average_not_A_1) * (n_A_1 * n_not_A_1) / N_1
+        self.u = (average_A_1 - average_not_A_1) #* (n_A_1 * n_not_A_1) / N_1
         #  print(u)
         #  print(u[sensible_feature])
 
-        newdata = np.array([ex if ex[self.sensible_feature] == self.val0 else ex - self.u for ex in self.dataset.data])
+        newdata = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in self.dataset.data])
         #  newdata = map(lambda x: x + u, dataset_train.data)
         newdata = np.delete(newdata, self.sensible_feature, 1)
         #  print(newdata.shape)
