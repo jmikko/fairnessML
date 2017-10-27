@@ -99,7 +99,7 @@ if grid_search_complete:
         ]
 else:
     print('---> No grid search performed! <---')
-    param_grid_linear = [{'C': [5.0], 'kernel': ['linear']}]
+    param_grid_linear = [{'C': [1.0], 'kernel': ['linear']}]
     param_grid_all = [{'C': [10.0], 'kernel': ['rbf'], 'gamma': [0.4]}]
 
 if smaller_option:
@@ -203,7 +203,7 @@ for iteration in range(number_of_iterations):
                   set(dataset_train.data[:, sensible_feature]))
     elif experiment_number == 10:
         print('Loading Default (gender) dataset [other categoricals are removed!]...')
-        dataset_train = load_default(remove_categorical=False, smaller=smaller_option, scaler=True)
+        dataset_train = load_default(remove_categorical=True, smaller=smaller_option, scaler=True)
         sensible_feature = 1  # gender
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
@@ -259,6 +259,9 @@ for iteration in range(number_of_iterations):
         clf.fit(dataset_train.data, dataset_train.target)
         if verbose >= 3:
             print('Y_hat:', clf.best_estimator_)
+            print('Relative weight for the sensible feature:', clf.best_estimator_.coef_[0, sensible_feature])
+            print('All the weights:', clf.best_estimator_.coef_[0, :])
+
         # Accuracy & fairness stats
         pred = clf.predict(dataset_test.data)
         pred_train = clf.predict(dataset_train.data)
