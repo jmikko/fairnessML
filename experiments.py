@@ -66,20 +66,20 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 
 # Experimental settings
-experiment_number = 10
+experiment_number = 0
 smaller_option = False
 accuracy_balanced = True
 verbose = 3
 
 number_of_iterations = 30
 
-linear = True
-zafar = False
+linear = False
+zafar = True
 not_linear = False
 
 
 grid_search_complete = True
-n_jobs = 15
+n_jobs = 2
 if grid_search_complete:
     if experiment_number in [10]:
         param_grid_linear = [
@@ -512,12 +512,9 @@ for iteration in range(number_of_iterations):
         eq_opp_train['ourK'].append(np.abs(list(eqopptrain[0].values())[0] - list(eqopptrain[0].values())[1]))
         eq_opp_test['ourK'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
 
-        sys.path.insert(0,
-                        './zafar_methods/fair_classification/')  # the code for fair classification is in this directory
-
     if zafar:
         # Zafar
-
+        sys.path.insert(0, './zafar_methods/fair_classification/')
         # from generate_synthetic_data import *
         import utils as ut
         import funcs_disp_mist as fdm
@@ -594,12 +591,13 @@ for iteration in range(number_of_iterations):
                      np.mean(accuracy_test['our']), np.std(accuracy_test['our']),
                      np.mean(eq_opp_train['our']), np.std(eq_opp_train['our']),
                      np.mean(eq_opp_test['our']), np.std(eq_opp_test['our'])))
-        if not_linear:
+        if zafar:
             print('Zafar \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['zafar']), np.std(accuracy_train['zafar']),
                      np.mean(accuracy_test['zafar']), np.std(accuracy_test['zafar']),
                      np.mean(eq_opp_train['zafar']), np.std(eq_opp_train['zafar']),
                      np.mean(eq_opp_test['zafar']), np.std(eq_opp_test['zafar'])))
+        if not_linear:
             print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['svmK']), np.std(accuracy_train['svmK']),
                      np.mean(accuracy_test['svmK']), np.std(accuracy_test['svmK']),
@@ -634,12 +632,13 @@ if linear:
              np.mean(accuracy_test['our']), np.std(accuracy_test['our']),
              np.mean(eq_opp_train['our']), np.std(eq_opp_train['our']),
              np.mean(eq_opp_test['our']), np.std(eq_opp_test['our'])))
-if not_linear:
+if zafar:
     print('Zafar \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['zafar']), np.std(accuracy_train['zafar']),
              np.mean(accuracy_test['zafar']), np.std(accuracy_test['zafar']),
              np.mean(eq_opp_train['zafar']), np.std(eq_opp_train['zafar']),
              np.mean(eq_opp_test['zafar']), np.std(eq_opp_test['zafar'])))
+if not_linear:
     print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['svmK']), np.std(accuracy_train['svmK']),
              np.mean(accuracy_test['svmK']), np.std(accuracy_test['svmK']),
