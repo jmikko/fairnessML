@@ -53,7 +53,7 @@ class UncorrelationMethod:
         #  print(len(average_A_1), len(average_not_A_1))
         #  print(n_A_1, n_not_A_1, N_1)
 
-        self.u = (average_A_1 - average_not_A_1) #* (n_A_1 * n_not_A_1) / N_1
+        self.u = -(average_A_1 - average_not_A_1) #* (n_A_1 * n_not_A_1) / N_1
         #  print(u)
         #  print(u[sensible_feature])
 
