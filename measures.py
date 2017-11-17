@@ -1,4 +1,32 @@
 import numpy as np
+from sklearn.metrics import confusion_matrix
+
+
+def subgrups_sensible_feature(data, sensible_feature):
+    dict_idxs = {}
+    values_of_sensible_feature = list(set(data.data[:, sensible_feature]))
+    for val in values_of_sensible_feature:
+        dict_idxs[val] = [idx for idx, x in enumerate(data.data) if x[sensible_feature] == val]
+    return dict_idxs
+
+
+def fpr(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    return float(fp) / float(fp + tn)
+
+
+def tpr(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    return float(tp) / float(tp + fn)
+
+
+def fair_tpr_from_model(data, model, sensible_feature):
+    predictions = model.predict(data.data)
+    truth = data.target
+    dict_idxs = subgrups_sensible_feature(data, sensible_feature)
+    for val in dict_idxs:
+        dict_idxs[val] = tpr(truth[dict_idxs[val]], predictions[dict_idxs[val]])
+    return dict_idxs
 
 
 def equalized_odds_measure_TP(data, model, sensible_features, ylabel, rev_pred=1):
@@ -151,5 +179,10 @@ if __name__ == "__main__":
 
     # Fairness measure
     print(equalized_odds_measure_TP(diabetes, clf, [1], ylabel=1))  # Feature 1 is SEX
+
+    # New measures
+    idxs = subgrups_sensible_feature(diabetes, sensible_feature=1)
+    print('TPR')
+    print(fair_tpr_from_model(diabetes, clf, sensible_feature=1))
 
 
