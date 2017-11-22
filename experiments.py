@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt  # for plotting stuff
 from sklearn.metrics import recall_score
 from sklearn.metrics.classification import _check_targets
 from sklearn.metrics import make_scorer
+from validation_method import two_step_validation_with_DEO
 
 # ---------------------------------------------------------------------------------- #
 # ---------------------------------------------------------------------------------- #
@@ -73,9 +74,9 @@ verbose = 3
 
 number_of_iterations = 30
 
-linear = False
-zafar = True
-not_linear = False
+linear = True
+zafar = False
+not_linear = True
 
 
 grid_search_complete = True
@@ -91,11 +92,11 @@ if grid_search_complete:
         ]
     else:
         param_grid_linear = [
-            {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'kernel': ['linear']}
+            {'C': np.logspace(-5, 1, 10), 'kernel': ['linear']}
         ]
         param_grid_all = [
-            {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'kernel': ['linear']},
-            {'C': [0.1, 0.5, 1.0, 10.0, 100.0], 'gamma': [0.1, 0.01], 'kernel': ['rbf']},
+            {'C': np.logspace(-5, 1, 10), 'kernel': ['linear']},
+            {'C': np.logspace(-5, 1, 10), 'gamma': [1.0, 0.1, 0.01, 0.001], 'kernel': ['rbf']},
         ]
 else:
     print('---> No grid search performed! <---')
@@ -255,21 +256,22 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Linear SVM...')
         svc = svm.SVC()
-        clf = GridSearchCV(svc, param_grid_linear, n_jobs=n_jobs, scoring=make_scorer(accuracy_score))
-        clf.fit(dataset_train.data, dataset_train.target)
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+                                                             sensible_feature=sensible_feature, params=param_grid_linear)
+
         if verbose >= 3:
-            print('Y_hat:', clf.best_estimator_)
-            print('Relative weight for the sensible feature:', clf.best_estimator_.coef_[0, sensible_feature])
-            print('All the weights:', clf.best_estimator_.coef_[0, :])
+            print('Y_hat:', best_estimator)
+            print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
+            print('All the weights:', best_estimator.coef_[0, :])
 
         # Accuracy & fairness stats
-        pred = clf.predict(dataset_test.data)
-        pred_train = clf.predict(dataset_train.data)
+        pred = best_estimator.predict(dataset_test.data)
+        pred_train = best_estimator.predict(dataset_train.data)
 
         acctest = accuracy_score(dataset_test.target, pred)
         acctrain = accuracy_score(dataset_train.target, pred_train)
-        eqopptest = equalized_odds_measure_TP(dataset_test, clf, [sensible_feature], ylabel=1)
-        eqopptrain = equalized_odds_measure_TP(dataset_train, clf, [sensible_feature], ylabel=1)
+        eqopptest = equalized_odds_measure_TP(dataset_test, best_estimator, [sensible_feature], ylabel=1)
+        eqopptrain = equalized_odds_measure_TP(dataset_train, best_estimator, [sensible_feature], ylabel=1)
         if verbose >= 2:
             print('Accuracy train:', acctrain)
             print('Accuracy test:', acctest)
@@ -284,7 +286,7 @@ for iteration in range(number_of_iterations):
 
         # Hardt method
         print('\nHardt method on linear SVM...')
-        algorithm = HardtMethod(dataset_train, clf, sensible_feature)
+        algorithm = HardtMethod(dataset_train, best_estimator, sensible_feature)
         res = algorithm.fit()
 
         if verbose >= 2:
@@ -355,24 +357,31 @@ for iteration in range(number_of_iterations):
         # Our uncorrelation method - Linear
         print('\nOur uncorrelation method...')
         list_of_sensible_feature_test = dataset_test.data[:, sensible_feature]
+        list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
         svc = svm.SVC()
-        clf = GridSearchCV(svc, param_grid_linear, n_jobs=n_jobs, scoring=make_scorer(accuracy_score))
-        algorithm = UncorrelationMethod(dataset_train, clf, sensible_feature)
-        algorithm.fit()
+        algorithm = UncorrelationMethod(dataset_train, model=None, sensible_feature=sensible_feature)
+        new_dataset_train = algorithm.new_representation(dataset_train.data)
+        new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
+        new_dataset_test = algorithm.new_representation(dataset_test.data)
+        new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
+        score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc,
+                                                             sensible_feature=sensible_feature, params=param_grid_linear,
+                                                             list_of_sensible_feature=[x[sensible_feature] for x in dataset_train.data])
+
         if verbose >= 3:
-            print('Our Y:', algorithm.model.best_estimator_)
+            print('Our Y:', best_estimator)
 
         # Accuracy
-        pred = algorithm.predict(dataset_test.data)
-        pred_train = algorithm.predict(dataset_train.data)
-        facctrain = accuracy_score(dataset_train.target, pred_train)
-        facctest = accuracy_score(dataset_test.target, pred)
+        pred = best_estimator.predict(new_dataset_test.data)
+        pred_train = best_estimator.predict(new_dataset_train.data)
+        facctrain = accuracy_score(new_dataset_train.target, pred_train)
+        facctest = accuracy_score(new_dataset_test.target, pred)
         if verbose >= 2:
             print('Our Accuracy train:', facctest)
             print('Our Accuracy test:', facctrain)
         # Fairness measure
-        eqopptrain = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_train, algorithm, [algorithm.list_of_sensible_feature_train], ylabel=1)
-        eqopptest = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_test, algorithm, [list_of_sensible_feature_test], ylabel=1)
+        eqopptrain = equalized_odds_measure_TP_from_list_of_sensfeat(new_dataset_train, best_estimator, [list_of_sensible_feature_train], ylabel=1)
+        eqopptest = equalized_odds_measure_TP_from_list_of_sensfeat(new_dataset_test, best_estimator, [list_of_sensible_feature_test], ylabel=1)
         if verbose >= 2:
             print('Eq. opp. train fair: \n', eqopptrain)
             print('Eq. opp. test fair: \n', eqopptest)
@@ -382,23 +391,22 @@ for iteration in range(number_of_iterations):
         eq_opp_train['our'].append(np.abs(list(eqopptrain[0].values())[0] - list(eqopptrain[0].values())[1]))
         eq_opp_test['our'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
 
-
     if not_linear:
         # Train an SVM using the training set
         print('\nGrid search for the standard Kernel SVM...')
         svc = svm.SVC()
-        clf = GridSearchCV(svc, param_grid_all, n_jobs=n_jobs, scoring=make_scorer(accuracy_score))
-        clf.fit(dataset_train.data, dataset_train.target)
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+                                                             sensible_feature=sensible_feature, params=param_grid_linear)
         if verbose >= 3:
-            print('Y_hat:', clf.best_estimator_)
+            print('Y_hat:', best_estimator)
         # Accuracy & fairness stats
-        pred = clf.predict(dataset_test.data)
-        pred_train = clf.predict(dataset_train.data)
+        pred = best_estimator.predict(dataset_test.data)
+        pred_train = best_estimator.predict(dataset_train.data)
 
         acctest = accuracy_score(dataset_test.target, pred)
         acctrain = accuracy_score(dataset_train.target, pred_train)
-        eqopptest = equalized_odds_measure_TP(dataset_test, clf, [sensible_feature], ylabel=1)
-        eqopptrain = equalized_odds_measure_TP(dataset_train, clf, [sensible_feature], ylabel=1)
+        eqopptest = equalized_odds_measure_TP(dataset_test, best_estimator, [sensible_feature], ylabel=1)
+        eqopptrain = equalized_odds_measure_TP(dataset_train, best_estimator, [sensible_feature], ylabel=1)
         if verbose >= 2:
             print('Accuracy train:', acctrain)
             print('Accuracy test:', acctest)
@@ -414,7 +422,7 @@ for iteration in range(number_of_iterations):
 
         # Hardt method
         print('\nHardtK method...')
-        algorithm = HardtMethod(dataset_train, clf, sensible_feature)
+        algorithm = HardtMethod(dataset_train, best_estimator, sensible_feature)
         res = algorithm.fit()
 
         if verbose >= 2:
@@ -488,21 +496,23 @@ for iteration in range(number_of_iterations):
         list_of_sensible_feature_test = dataset_test.data[:, sensible_feature]
         list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
 
-        algorithm = Fair_SVM(sensible_feature=sensible_feature)
-        clf = GridSearchCV(algorithm, param_grid_all, n_jobs=n_jobs, scoring=make_scorer(accuracy_score))
-        clf.fit(dataset_train.data, dataset_train.target)
+        svc = Fair_SVM(sensible_feature=sensible_feature)
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+                                                             sensible_feature=sensible_feature, params=param_grid_linear)
+
+
         if verbose >= 3:
-            print('Our Y:', clf.best_estimator_)
+            print('Our Y:', best_estimator)
 
         # Accuracy
-        facctest = clf.score(dataset_test.data, dataset_test.target)
-        facctrain = clf.score(dataset_train.data, dataset_train.target)
+        facctest = best_estimator.score(dataset_test.data, dataset_test.target)
+        facctrain = best_estimator.score(dataset_train.data, dataset_train.target)
         if verbose >= 2:
             print('Our Accuracy train:', facctest)
             print('Our Accuracy test:', facctrain)
         # Fairness measure
-        eqopptrain = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_train, clf, [list_of_sensible_feature_train], ylabel=1)
-        eqopptest = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_test, clf, [list_of_sensible_feature_test], ylabel=1)
+        eqopptrain = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_train, best_estimator, [list_of_sensible_feature_train], ylabel=1)
+        eqopptest = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_test, best_estimator, [list_of_sensible_feature_test], ylabel=1)
         if verbose >= 2:
             print('Eq. opp. train fair: \n', eqopptrain)
             print('Eq. opp. test fair: \n', eqopptest)

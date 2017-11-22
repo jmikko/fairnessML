@@ -24,8 +24,13 @@ class UncorrelationMethod:
 
     def new_representation(self, examples):
         if self.u is None:
-            print('Model not trained yet!')
-            return 0
+            tmp = [ex for idx, ex in enumerate(self.dataset.data)
+                   if self.dataset.target[idx] == 1 and ex[self.sensible_feature] == self.val1]
+            average_A_1 = np.mean(tmp, 0)
+            tmp = [ex for idx, ex in enumerate(self.dataset.data)
+                   if self.dataset.target[idx] == 1 and ex[self.sensible_feature] == self.val0]
+            average_not_A_1 = np.mean(tmp, 0)
+            self.u = -(average_A_1 - average_not_A_1)
         new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in examples])
         new_examples = np.delete(new_examples, self.sensible_feature, 1)
         return new_examples

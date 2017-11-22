@@ -102,7 +102,7 @@ class Fair_SVM(BaseEstimator):
         a = np.ravel(solution['x'])
 
         # Support vectors have non zero lagrange multipliers
-        sv = a > 1e-5
+        sv = a > 1e-7
         ind = np.arange(len(a))[sv]
         self.a = a[sv]
         self.sv = X[sv]
