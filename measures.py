@@ -9,6 +9,13 @@ def subgrups_sensible_feature(data, sensible_feature):
         dict_idxs[val] = [idx for idx, x in enumerate(data.data) if x[sensible_feature] == val]
     return dict_idxs
 
+def subgrups_sensible_feature_data(data, sensible_feature):
+    dict_idxs = {}
+    values_of_sensible_feature = list(set(data[:, sensible_feature]))
+    for val in values_of_sensible_feature:
+        dict_idxs[val] = [idx for idx, x in enumerate(data) if x[sensible_feature] == val]
+    return dict_idxs
+
 
 def fpr(y_true, y_pred):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
@@ -27,6 +34,22 @@ def fair_tpr_from_model(data, model, sensible_feature):
     for val in dict_idxs:
         dict_idxs[val] = tpr(truth[dict_idxs[val]], predictions[dict_idxs[val]])
     return dict_idxs
+
+
+def fair_tpr_from_precomputed(y, y_pred, dict_sensible_feature):
+    dict_idxs = dict_sensible_feature
+    for val in dict_idxs:
+        dict_idxs[val] = tpr(y[dict_idxs[val]], y_pred[dict_idxs[val]])
+    return dict_idxs
+
+
+def fair_DEO_from_precomputed(y, y_pred, dict_sensible_feature):
+    dict_idxs = fair_tpr_from_precomputed(y, y_pred, dict_sensible_feature)
+    if len(dict_idxs) == 2:
+        keys = list(dict_idxs.keys())
+        return np.abs(dict_idxs[keys[0]] - dict_idxs[keys[1]])
+    else:
+        return 0.0
 
 
 def equalized_odds_measure_TP(data, model, sensible_features, ylabel, rev_pred=1):
