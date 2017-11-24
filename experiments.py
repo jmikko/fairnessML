@@ -69,7 +69,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 # Experimental settings
 experiment_number = 0
 smaller_option = False
-accuracy_balanced = True
+accuracy_balanced = False
 verbose = 3
 
 number_of_iterations = 30

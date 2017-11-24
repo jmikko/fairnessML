@@ -56,7 +56,7 @@ plt.scatter(X[n_samples * 2:, 0], X[n_samples * 2:, 1], marker='+', s=25, c=y[n_
 
 
 #svc = svm.SVC(C=10.0, kernel='linear', class_weight="balanced")
-svc = svm.LinearSVC(C=10.0, fit_intercept=True)#, class_weight="balanced")
+svc = svm.LinearSVC(C=10.0, fit_intercept=False)#, class_weight="balanced")
 svc.fit(X, y)
 min_x = np.min(X[:, 0])
 max_x = np.max(X[:, 0])
