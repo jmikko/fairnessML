@@ -21,6 +21,8 @@ class UncorrelationMethod:
         self.model = model
         self.sensible_feature = sensible_feature
         self.u = None
+        self.coef_ = None
+        self.intercept_ = None
 
     def new_representation(self, examples):
         if self.u is None:
@@ -69,6 +71,8 @@ class UncorrelationMethod:
         self.dataset = namedtuple('_', 'data, target')(newdata, self.dataset.target)
 
         self.model.fit(self.dataset.data, self.dataset.target)
+        self.coef_ = self.model.coef_
+        self.intercept_ = self.model.intercept_
 
 
 if __name__ == "__main__":
