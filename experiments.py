@@ -117,6 +117,8 @@ accuracy_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 
 accuracy_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
 eq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
 eq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
+peq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
+peq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
 
 print('Experimental settings')
 print('Parameter Grid Search for Linear')
@@ -283,6 +285,8 @@ for iteration in range(number_of_iterations):
         accuracy_test['svm'].append(acctest)
         eq_opp_train['svm'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
         eq_opp_test['svm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
+        peq_opp_train['svm'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+        peq_opp_test['svm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
         # Hardt method
         print('\nHardt method on linear SVM...')
@@ -352,7 +356,8 @@ for iteration in range(number_of_iterations):
         accuracy_test['hardt'].append(facctest)
         eq_opp_train['hardt'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
         eq_opp_test['hardt'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
-
+        peq_opp_train['hardt'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+        peq_opp_test['hardt'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
         # Our uncorrelation method - Linear
         print('\nOur uncorrelation method...')
@@ -390,6 +395,8 @@ for iteration in range(number_of_iterations):
         accuracy_test['our'].append(facctest)
         eq_opp_train['our'].append(np.abs(list(eqopptrain[0].values())[0] - list(eqopptrain[0].values())[1]))
         eq_opp_test['our'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
+        peq_opp_train['our'].append(np.abs(list(eqopptrain[0].values())[0] * list(eqopptrain[0].values())[1]))
+        peq_opp_test['our'].append(np.abs(list(eqopptest[0].values())[0] * list(eqopptest[0].values())[1]))
 
     if not_linear:
         # Train an SVM using the training set
@@ -418,7 +425,8 @@ for iteration in range(number_of_iterations):
         accuracy_test['svmK'].append(acctest)
         eq_opp_train['svmK'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
         eq_opp_test['svmK'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
-
+        peq_opp_train['svmK'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+        peq_opp_test['svmK'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
         # Hardt method
         print('\nHardtK method...')
@@ -488,7 +496,8 @@ for iteration in range(number_of_iterations):
         accuracy_test['hardtK'].append(facctest)
         eq_opp_train['hardtK'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
         eq_opp_test['hardtK'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
-
+        peq_opp_train['hardtK'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+        peq_opp_test['hardtK'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
 
         # Our uncorrelation method - Kernel
@@ -521,6 +530,8 @@ for iteration in range(number_of_iterations):
         accuracy_test['ourK'].append(facctest)
         eq_opp_train['ourK'].append(np.abs(list(eqopptrain[0].values())[0] - list(eqopptrain[0].values())[1]))
         eq_opp_test['ourK'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
+        peq_opp_train['ourK'].append(np.abs(list(eqopptrain[0].values())[0] * list(eqopptrain[0].values())[1]))
+        peq_opp_test['ourK'].append(np.abs(list(eqopptest[0].values())[0] * list(eqopptest[0].values())[1]))
 
     if zafar:
         # Zafar
@@ -581,87 +592,117 @@ for iteration in range(number_of_iterations):
         accuracy_test['zafar'].append(acc_cons)
         eq_opp_train['zafar'].append(np.abs(s_attr_to_fp_fn_train_cons["s1"][0.0]["fpr"] - s_attr_to_fp_fn_train_cons["s1"][1.0]["fpr"]))
         eq_opp_test['zafar'].append(np.abs(s_attr_to_fp_fn_test_cons["s1"][0.0]["fpr"] - s_attr_to_fp_fn_test_cons["s1"][1.0]["fpr"]))
+        peq_opp_train['zafar'].append(np.abs(s_attr_to_fp_fn_train_cons["s1"][0.0]["fpr"] * s_attr_to_fp_fn_train_cons["s1"][1.0]["fpr"]))
+        peq_opp_test['zafar'].append(np.abs(s_attr_to_fp_fn_test_cons["s1"][0.0]["fpr"] * s_attr_to_fp_fn_test_cons["s1"][1.0]["fpr"]))
 
     if verbose >= 1 and iteration != number_of_iterations - 1:
         print('\n\nStats at iteration', iteration + 1)
-        print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test')
+        print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test \t Prod.Eq.Opp.train \t Prod.Eq.Opp.test')
         if linear:
-            print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+            print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['svm']), np.std(accuracy_train['svm']),
                      np.mean(accuracy_test['svm']), np.std(accuracy_test['svm']),
                      np.mean(eq_opp_train['svm']), np.std(eq_opp_train['svm']),
-                     np.mean(eq_opp_test['svm']), np.std(eq_opp_test['svm'])))
-            print('Hardt \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                     np.mean(eq_opp_test['svm']), np.std(eq_opp_test['svm']),
+                     np.mean(peq_opp_train['svm']), np.std(peq_opp_train['svm']),
+                     np.mean(peq_opp_test['svm']), np.std(peq_opp_test['svm'])))
+            print('Hardt \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['hardt']), np.std(accuracy_train['hardt']),
                      np.mean(accuracy_test['hardt']), np.std(accuracy_test['hardt']),
                      np.mean(eq_opp_train['hardt']), np.std(eq_opp_train['hardt']),
-                     np.mean(eq_opp_test['hardt']), np.std(eq_opp_test['hardt'])))
-            print('Our \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                     np.mean(eq_opp_test['hardt']), np.std(eq_opp_test['hardt']),
+                     np.mean(peq_opp_train['hardt']), np.std(peq_opp_train['hardt']),
+                     np.mean(peq_opp_test['hardt']), np.std(peq_opp_test['hardt'])))
+            print('Our \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['our']), np.std(accuracy_train['our']),
                      np.mean(accuracy_test['our']), np.std(accuracy_test['our']),
                      np.mean(eq_opp_train['our']), np.std(eq_opp_train['our']),
-                     np.mean(eq_opp_test['our']), np.std(eq_opp_test['our'])))
+                     np.mean(eq_opp_test['our']), np.std(eq_opp_test['our']),
+                     np.mean(peq_opp_train['our']), np.std(peq_opp_train['our']),
+                     np.mean(peq_opp_test['our']), np.std(peq_opp_test['our'])))
         if zafar:
-            print('Zafar \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+            print('Zafar \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['zafar']), np.std(accuracy_train['zafar']),
                      np.mean(accuracy_test['zafar']), np.std(accuracy_test['zafar']),
                      np.mean(eq_opp_train['zafar']), np.std(eq_opp_train['zafar']),
-                     np.mean(eq_opp_test['zafar']), np.std(eq_opp_test['zafar'])))
+                     np.mean(eq_opp_test['zafar']), np.std(eq_opp_test['zafar']),
+                     np.mean(peq_opp_train['zafar']), np.std(peq_opp_train['zafar']),
+                     np.mean(peq_opp_test['zafar']), np.std(peq_opp_test['zafar'])))
         if not_linear:
-            print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+            print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['svmK']), np.std(accuracy_train['svmK']),
                      np.mean(accuracy_test['svmK']), np.std(accuracy_test['svmK']),
                      np.mean(eq_opp_train['svmK']), np.std(eq_opp_train['svmK']),
-                     np.mean(eq_opp_test['svmK']), np.std(eq_opp_test['svmK'])))
-            print('HardtK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                     np.mean(eq_opp_test['svmK']), np.std(eq_opp_test['svmK']),
+                     np.mean(peq_opp_train['svmK']), np.std(peq_opp_train['svmK']),
+                     np.mean(peq_opp_test['svmK']), np.std(peq_opp_test['svmK'])))
+            print('HardtK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['hardtK']), np.std(accuracy_train['hardtK']),
                      np.mean(accuracy_test['hardtK']), np.std(accuracy_test['hardtK']),
                      np.mean(eq_opp_train['hardtK']), np.std(eq_opp_train['hardtK']),
-                     np.mean(eq_opp_test['hardtK']), np.std(eq_opp_test['hardtK'])))
-            print('OurK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                     np.mean(eq_opp_test['hardtK']), np.std(eq_opp_test['hardtK']),
+                     np.mean(peq_opp_train['hardtK']), np.std(peq_opp_train['hardtK']),
+                     np.mean(peq_opp_test['hardtK']), np.std(peq_opp_test['hardtK'])))
+            print('OurK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                   % (np.mean(accuracy_train['ourK']), np.std(accuracy_train['ourK']),
                      np.mean(accuracy_test['ourK']), np.std(accuracy_test['ourK']),
                      np.mean(eq_opp_train['ourK']), np.std(eq_opp_train['ourK']),
-                     np.mean(eq_opp_test['ourK']), np.std(eq_opp_test['ourK'])))
+                     np.mean(eq_opp_test['ourK']), np.std(eq_opp_test['ourK']),
+                     np.mean(peq_opp_train['ourK']), np.std(peq_opp_train['ourK']),
+                     np.mean(peq_opp_test['ourK']), np.std(peq_opp_test['ourK'])))
 
 print('\n\n\n\nFinal stats (after', iteration+1, 'iterations)')
-print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test')
+print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test \t Prod.Eq.Opp.train \t Prod.Eq.Opp.test')
 if linear:
-    print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+    print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['svm']), np.std(accuracy_train['svm']),
              np.mean(accuracy_test['svm']), np.std(accuracy_test['svm']),
              np.mean(eq_opp_train['svm']), np.std(eq_opp_train['svm']),
-             np.mean(eq_opp_test['svm']), np.std(eq_opp_test['svm'])))
-    print('Hardt \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+             np.mean(eq_opp_test['svm']), np.std(eq_opp_test['svm']),
+             np.mean(peq_opp_train['svm']), np.std(peq_opp_train['svm']),
+             np.mean(peq_opp_test['svm']), np.std(peq_opp_test['svm'])))
+    print('Hardt \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['hardt']), np.std(accuracy_train['hardt']),
              np.mean(accuracy_test['hardt']), np.std(accuracy_test['hardt']),
              np.mean(eq_opp_train['hardt']), np.std(eq_opp_train['hardt']),
-             np.mean(eq_opp_test['hardt']), np.std(eq_opp_test['hardt'])))
-    print('Our \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+             np.mean(eq_opp_test['hardt']), np.std(eq_opp_test['hardt']),
+             np.mean(peq_opp_train['hardt']), np.std(peq_opp_train['hardt']),
+             np.mean(peq_opp_test['hardt']), np.std(peq_opp_test['hardt'])))
+    print('Our \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['our']), np.std(accuracy_train['our']),
              np.mean(accuracy_test['our']), np.std(accuracy_test['our']),
              np.mean(eq_opp_train['our']), np.std(eq_opp_train['our']),
-             np.mean(eq_opp_test['our']), np.std(eq_opp_test['our'])))
+             np.mean(eq_opp_test['our']), np.std(eq_opp_test['our']),
+             np.mean(peq_opp_train['our']), np.std(peq_opp_train['our']),
+             np.mean(peq_opp_test['our']), np.std(peq_opp_test['our'])))
 if zafar:
-    print('Zafar \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+    print('Zafar \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['zafar']), np.std(accuracy_train['zafar']),
              np.mean(accuracy_test['zafar']), np.std(accuracy_test['zafar']),
              np.mean(eq_opp_train['zafar']), np.std(eq_opp_train['zafar']),
-             np.mean(eq_opp_test['zafar']), np.std(eq_opp_test['zafar'])))
+             np.mean(eq_opp_test['zafar']), np.std(eq_opp_test['zafar']),
+             np.mean(peq_opp_train['zafar']), np.std(peq_opp_train['zafar']),
+             np.mean(peq_opp_test['zafar']), np.std(peq_opp_test['zafar'])))
 if not_linear:
-    print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+    print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['svmK']), np.std(accuracy_train['svmK']),
              np.mean(accuracy_test['svmK']), np.std(accuracy_test['svmK']),
              np.mean(eq_opp_train['svmK']), np.std(eq_opp_train['svmK']),
-             np.mean(eq_opp_test['svmK']), np.std(eq_opp_test['svmK'])))
-    print('HardtK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+             np.mean(eq_opp_test['svmK']), np.std(eq_opp_test['svmK']),
+             np.mean(peq_opp_train['svmK']), np.std(peq_opp_train['svmK']),
+             np.mean(peq_opp_test['svmK']), np.std(peq_opp_test['svmK'])))
+    print('HardtK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['hardtK']), np.std(accuracy_train['hardtK']),
              np.mean(accuracy_test['hardtK']), np.std(accuracy_test['hardtK']),
              np.mean(eq_opp_train['hardtK']), np.std(eq_opp_train['hardtK']),
-             np.mean(eq_opp_test['hardtK']), np.std(eq_opp_test['hardtK'])))
-    print('OurK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+             np.mean(eq_opp_test['hardtK']), np.std(eq_opp_test['hardtK']),
+             np.mean(peq_opp_train['hardtK']), np.std(peq_opp_train['hardtK']),
+             np.mean(peq_opp_test['hardtK']), np.std(peq_opp_test['hardtK'])))
+    print('OurK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
           % (np.mean(accuracy_train['ourK']), np.std(accuracy_train['ourK']),
              np.mean(accuracy_test['ourK']), np.std(accuracy_test['ourK']),
              np.mean(eq_opp_train['ourK']), np.std(eq_opp_train['ourK']),
-             np.mean(eq_opp_test['ourK']), np.std(eq_opp_test['ourK'])))
+             np.mean(eq_opp_test['ourK']), np.std(eq_opp_test['ourK']),
+             np.mean(peq_opp_train['ourK']), np.std(peq_opp_train['ourK']),
+             np.mean(peq_opp_test['ourK']), np.std(peq_opp_test['ourK'])))
 

@@ -169,7 +169,7 @@ if __name__ == "__main__":
     sensible_feature = 1  # sex
 
 
-    ntrain = 5 * len(dataset_train.target) // 10
+    ntrain = 9 * len(dataset_train.target) // 10
     dataset_train.data = dataset_train.data[:ntrain, :]
     dataset_train.target = dataset_train.target[:ntrain]
     dataset_test.data = dataset_test.data[ntrain:, :]
@@ -265,8 +265,8 @@ if __name__ == "__main__":
                                              1 if ex[sensible_feature] == val1 else 0))
                      for ex in dataset_test.data]
         # Accuracy
-        print('Fair Accuracy test:', accuracy_score(dataset_train.target, fair_pred_train))
-        print('Fair Accuracy train:', accuracy_score(dataset_test.target, fair_pred))  # sul train?
+        print('Fair Accuracy test:', accuracy_score(dataset_test.target, fair_pred))
+        print('Fair Accuracy train:', accuracy_score(dataset_train.target, fair_pred_train))
         acc_Y_hat_test = accuracy_score(dataset_test.target, pred)
         acc_Y_hat_train = accuracy_score(dataset_train.target, pred_train)
         y_tilde_equals_y_hat = theta_11 * phi_hat_11 + \
