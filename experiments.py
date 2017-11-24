@@ -359,6 +359,39 @@ for iteration in range(number_of_iterations):
         peq_opp_train['hardt'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
         peq_opp_test['hardt'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
+        # Weighted SVM
+        # print('\nGrid search for the Weighted Linear SVM...')
+        # svc = svm.SVC()
+        # score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+        #                                                      sensible_feature=sensible_feature, params=param_grid_linear)
+        #
+        # if verbose >= 3:
+        #     print('Y_hat:', best_estimator)
+        #     print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
+        #     print('All the weights:', best_estimator.coef_[0, :])
+        #
+        # # Accuracy & fairness stats
+        # pred = best_estimator.predict(dataset_test.data)
+        # pred_train = best_estimator.predict(dataset_train.data)
+        #
+        # acctest = accuracy_score(dataset_test.target, pred)
+        # acctrain = accuracy_score(dataset_train.target, pred_train)
+        # eqopptest = equalized_odds_measure_TP(dataset_test, best_estimator, [sensible_feature], ylabel=1)
+        # eqopptrain = equalized_odds_measure_TP(dataset_train, best_estimator, [sensible_feature], ylabel=1)
+        # if verbose >= 2:
+        #     print('Accuracy train:', acctrain)
+        #     print('Accuracy test:', acctest)
+        #     # Fairness measure
+        #     print('Eq. opp. train: \n', eqopptrain)
+        #     print('Eq. opp. test: \n', eqopptest)
+        #
+        # accuracy_train['wsvm'].append(acctrain)
+        # accuracy_test['wsvm'].append(acctest)
+        # eq_opp_train['wsvm'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
+        # eq_opp_test['wsvm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
+        # peq_opp_train['wsvm'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+        # peq_opp_test['wsvm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
+
         # Our uncorrelation method - Linear
         print('\nOur uncorrelation method...')
         list_of_sensible_feature_test = dataset_test.data[:, sensible_feature]

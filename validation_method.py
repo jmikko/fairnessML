@@ -58,7 +58,7 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
                 list_of_sensible_feature = np.array(list_of_sensible_feature)
                 for val in values_of_sensible_feature:
                     dict_idxs[val] = [idx for idx, s in enumerate(list_of_sensible_feature[inner_test]) if s == val]
-            inner_svc = svm.SVC()
+            inner_svc = estimator
             inner_svc.set_params(**param)
             inner_svc.fit(dataset_train.data[inner_train], dataset_train.target[inner_train])
             inner_test_prediction = inner_svc.predict(dataset_train.data[inner_test])
