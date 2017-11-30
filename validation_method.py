@@ -21,7 +21,7 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
     np.random.seed(random_state)
     random_state_inner = random_state
 
-    cv = KFold(n_splits=3, shuffle=False, random_state=random_state)
+    cv = KFold(n_splits=10, shuffle=False, random_state=random_state)
     clf = GridSearchCV(estimator=estimator, cv=cv, param_grid=params, n_jobs=1,
                        scoring=make_scorer(scorer))
     clf.fit(dataset_train.data, dataset_train.target)
@@ -47,7 +47,7 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
     inner_validation_dict = {}
     for param in params_accepted:
         inner_inner_DEO = []
-        cv = KFold(n_splits=3, shuffle=False, random_state=random_state_inner)
+        cv = KFold(n_splits=10, shuffle=False, random_state=random_state_inner)
         cv_split = cv.split(dataset_train.data)
         for inner_train, inner_test in cv_split:
             if list_of_sensible_feature is None:

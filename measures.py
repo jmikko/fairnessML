@@ -23,7 +23,11 @@ def fpr(y_true, y_pred):
 
 
 def tpr(y_true, y_pred):
+    if len(confusion_matrix(y_true, y_pred).ravel()) <= 3:
+        return 1.0
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    if tp + fn == 0:
+        return 1.0
     return float(tp) / float(tp + fn)
 
 

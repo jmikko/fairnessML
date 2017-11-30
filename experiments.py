@@ -92,11 +92,11 @@ if grid_search_complete:
         ]
     else:
         param_grid_linear = [
-            {'C': np.logspace(-5, 1, 10), 'kernel': ['linear']}
+            {'C': np.logspace(-6, 4, 30), 'kernel': ['linear']}
         ]
         param_grid_all = [
-            {'C': np.logspace(-5, 1, 10), 'kernel': ['linear']},
-            {'C': np.logspace(-5, 1, 10), 'gamma': [1.0, 0.1, 0.01, 0.001], 'kernel': ['rbf']},
+            {'C': np.logspace(-6, 4, 30), 'kernel': ['linear']},
+            {'C': np.logspace(-6, 4, 30), 'gamma': [1.0, 0.1, 0.01, 0.001], 'kernel': ['rbf']},
         ]
 else:
     print('---> No grid search performed! <---')
@@ -221,7 +221,7 @@ for iteration in range(number_of_iterations):
 
     if experiment_number in [0, 1]:
         # % for train
-        ntrain = 8 * len(dataset_train.target) // 10
+        ntrain = 5 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
         permutation = list(range(len(dataset_train.target)))
         np.random.shuffle(permutation)
@@ -236,7 +236,7 @@ for iteration in range(number_of_iterations):
         ntest = len(dataset_test.target)
     if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11]:
         # % for train
-        ntrain = 8 * len(dataset_train.target) // 10
+        ntrain = 9 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
         permutation = list(range(len(dataset_train.target)))
         np.random.shuffle(permutation)
