@@ -343,7 +343,7 @@ def load_hepatitis():
     from scipy.stats import mode
     hepatitis = pd.read_csv("./datasets/hepatitis/data.txt", header=-1)
     hepatitis = hepatitis.as_matrix()
-    hepatitis = np.where(np.isnan(hepatitis), mode(hepatitis, axis=0), hepatitis)
+    hepatitis = np.where(np.isnan(hepatitis), mode(hepatitis, axis=0), hepatitis)[1]
     y = hepatitis[:, -1]
     x = hepatitis[:, :-1]
     dataset = namedtuple('_', 'data, target')(x, y)

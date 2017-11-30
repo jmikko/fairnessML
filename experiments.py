@@ -1,6 +1,6 @@
 from load_data import load_binary_diabetes_uci, load_heart_uci, load_breast_cancer,\
     load_adult, load_adult_race, load_adult_race_white_vs_black, laod_propublica_fairml, laod_propublica_fairml_race,\
-    laod_propublica_fairml_hotencoded, load_default
+    laod_propublica_fairml_hotencoded, load_default, load_hepatitis
 from sklearn import svm
 import numpy as np
 from measures import equalized_odds_measure_TP, equalized_odds_measure_FP, equalized_odds_measure_from_pred_TP, equalized_odds_measure_TP_from_list_of_sensfeat
@@ -67,7 +67,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 
 # Experimental settings
-experiment_number = 0
+experiment_number = 11
 smaller_option = False
 accuracy_balanced = False
 verbose = 3
@@ -76,7 +76,7 @@ number_of_iterations = 30
 
 linear = True
 zafar = False
-not_linear = True
+not_linear = False
 
 
 grid_search_complete = True
@@ -211,6 +211,13 @@ for iteration in range(number_of_iterations):
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 11:
+        print('Loading Hepatitis (gender) dataset...')
+        dataset_train = load_hepatitis()
+        sensible_feature = 2  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
 
     if experiment_number in [0, 1]:
         # % for train
@@ -227,7 +234,7 @@ for iteration in range(number_of_iterations):
     if experiment_number in [2, 3]:
         ntrain = len(dataset_train.target)
         ntest = len(dataset_test.target)
-    if experiment_number in [4, 5, 6, 7, 8, 9, 10]:
+    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11]:
         # % for train
         ntrain = 8 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
