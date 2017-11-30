@@ -339,7 +339,18 @@ def load_default(remove_categorical=False, smaller=False, scaler=True):
         dataset = namedtuple('_', 'data, target')(dataset, default_payment)
     return dataset
 
+def load_hepatitis():
+    from scipy.stats import mode
+    hepatitis = pd.read_csv("./datasets/hepatitis/data.txt", header=-1)
+    hepatitis = hepatitis.as_matrix()
+    hepatitis = np.where(np.isnan(hepatitis), mode(hepatitis, axis=0), hepatitis)
+    y = hepatitis[:, -1]
+    x = hepatitis[:, :-1]
+    dataset = namedtuple('_', 'data, target')(x, y)
+    return dataset
+
 if __name__ == "__main__":
+    load_hepatitis()
     load_default()
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')

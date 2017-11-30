@@ -52,7 +52,7 @@ y = [1] * n_samples + [0] * n_samples + [1] * n_samples_low + [0] * n_samples
 y = np.array(y)
 
 plt.scatter(X[:n_samples * 2, 0], X[:n_samples * 2, 1], marker='o', s=25, c=y[:n_samples * 2], edgecolors='k', label='Group A')
-plt.scatter(X[n_samples * 2:, 0], X[n_samples * 2:, 1], marker='+', s=25, c=y[n_samples * 2:], edgecolors='k', label='Group B')
+plt.scatter(X[n_samples * 2:, 0], X[n_samples * 2:, 1], marker='s', s=25, c=y[n_samples * 2:], edgecolors='k', label='Group B')
 
 
 #svc = svm.SVC(C=10.0, kernel='linear', class_weight="balanced")
