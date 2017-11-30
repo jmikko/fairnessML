@@ -16,13 +16,13 @@ from sklearn.model_selection import KFold
 
 
 def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params, sensible_feature, scorer=accuracy_score,
-                                 verbose=0, random_state=0, list_of_sensible_feature=None):
+                                 n_jobs=1, verbose=0, random_state=0, list_of_sensible_feature=None):
 
     np.random.seed(random_state)
     random_state_inner = random_state
 
     cv = KFold(n_splits=10, shuffle=False, random_state=random_state)
-    clf = GridSearchCV(estimator=estimator, cv=cv, param_grid=params, n_jobs=1,
+    clf = GridSearchCV(estimator=estimator, cv=cv, param_grid=params, n_jobs=n_jobs,
                        scoring=make_scorer(scorer))
     clf.fit(dataset_train.data, dataset_train.target)
 

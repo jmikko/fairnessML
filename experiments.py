@@ -265,7 +265,7 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Linear SVM...')
         svc = svm.SVC()
-        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc, verbose=verbose,
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc, verbose=verbose, n_jobs=n_jobs,
                                                              sensible_feature=sensible_feature, params=param_grid_linear)
 
         if verbose >= 3:
@@ -409,7 +409,7 @@ for iteration in range(number_of_iterations):
         new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
         new_dataset_test = algorithm.new_representation(dataset_test.data)
         new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
-        score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc, verbose=verbose,
+        score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc, verbose=verbose, n_jobs=n_jobs,
                                                              sensible_feature=sensible_feature, params=param_grid_linear,
                                                              list_of_sensible_feature=[x[sensible_feature] for x in dataset_train.data])
 
@@ -442,7 +442,7 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Kernel SVM...')
         svc = svm.SVC()
-        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose,
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose, n_jobs=n_jobs,
                                                              sensible_feature=sensible_feature, params=param_grid_linear)
         if verbose >= 3:
             print('Y_hat:', best_estimator)
@@ -546,7 +546,7 @@ for iteration in range(number_of_iterations):
         list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
 
         svc = Fair_SVM(sensible_feature=sensible_feature)
-        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose,
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose, n_jobs=n_jobs,
                                                              sensible_feature=sensible_feature, params=param_grid_linear)
 
 
