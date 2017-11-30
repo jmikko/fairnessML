@@ -80,7 +80,7 @@ not_linear = False
 
 
 grid_search_complete = True
-n_jobs = 2
+n_jobs = -1
 if grid_search_complete:
     if experiment_number in [10]:
         param_grid_linear = [
@@ -92,11 +92,11 @@ if grid_search_complete:
         ]
     else:
         param_grid_linear = [
-            {'C': np.logspace(-6, 4, 30), 'kernel': ['linear']}
+            {'C': np.logspace(-4, 2, 15), 'kernel': ['linear']}
         ]
         param_grid_all = [
-            {'C': np.logspace(-6, 4, 30), 'kernel': ['linear']},
-            {'C': np.logspace(-6, 4, 30), 'gamma': [1.0, 0.1, 0.01, 0.001], 'kernel': ['rbf']},
+            {'C': np.logspace(-4, 2, 15), 'kernel': ['linear']},
+            {'C': np.logspace(-4, 2, 15), 'gamma': [1.0, 0.1, 0.01, 0.001], 'kernel': ['rbf']},
         ]
 else:
     print('---> No grid search performed! <---')
@@ -265,7 +265,7 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Linear SVM...')
         svc = svm.SVC()
-        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc, verbose=verbose,
                                                              sensible_feature=sensible_feature, params=param_grid_linear)
 
         if verbose >= 3:
@@ -409,7 +409,7 @@ for iteration in range(number_of_iterations):
         new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
         new_dataset_test = algorithm.new_representation(dataset_test.data)
         new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
-        score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc,
+        score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc, verbose=verbose,
                                                              sensible_feature=sensible_feature, params=param_grid_linear,
                                                              list_of_sensible_feature=[x[sensible_feature] for x in dataset_train.data])
 
@@ -442,7 +442,7 @@ for iteration in range(number_of_iterations):
         # Train an SVM using the training set
         print('\nGrid search for the standard Kernel SVM...')
         svc = svm.SVC()
-        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose,
                                                              sensible_feature=sensible_feature, params=param_grid_linear)
         if verbose >= 3:
             print('Y_hat:', best_estimator)
@@ -546,7 +546,7 @@ for iteration in range(number_of_iterations):
         list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
 
         svc = Fair_SVM(sensible_feature=sensible_feature)
-        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
+        score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose,
                                                              sensible_feature=sensible_feature, params=param_grid_linear)
 
 
