@@ -1,6 +1,6 @@
 from load_data import load_binary_diabetes_uci, load_heart_uci, load_breast_cancer,\
     load_adult, load_adult_race, load_adult_race_white_vs_black, laod_propublica_fairml, laod_propublica_fairml_race,\
-    laod_propublica_fairml_hotencoded, load_default, load_hepatitis
+    laod_propublica_fairml_hotencoded, load_default, load_hepatitis, load_arrhythmia
 from sklearn import svm
 import numpy as np
 from measures import equalized_odds_measure_TP, equalized_odds_measure_FP, equalized_odds_measure_from_pred_TP, equalized_odds_measure_TP_from_list_of_sensfeat
@@ -127,7 +127,6 @@ if __name__ == '__main__':
     print(param_grid_all)
     print('Number of iterations:', number_of_iterations)
 
-
     for iteration in range(number_of_iterations):
         seed = iteration
         np.random.seed(seed)
@@ -218,6 +217,13 @@ if __name__ == '__main__':
             if verbose >= 1 and iteration == 0:
                 print('Different values of the sensible feature', sensible_feature, ':',
                       set(dataset_train.data[:, sensible_feature]))
+        elif experiment_number == 11:
+            print('Loading Arrhythmia (gender) dataset for task: Normal Vs All-the-others...')
+            dataset_train = load_arrhythmia()
+            sensible_feature = 2  # gender
+            if verbose >= 1 and iteration == 0:
+                print('Different values of the sensible feature', sensible_feature, ':',
+                      set(dataset_train.data[:, sensible_feature]))
 
         if experiment_number in [0, 1]:
             # % for train
@@ -234,7 +240,7 @@ if __name__ == '__main__':
         if experiment_number in [2, 3]:
             ntrain = len(dataset_train.target)
             ntest = len(dataset_test.target)
-        if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11]:
+        if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12]:
             # % for train
             ntrain = 9 * len(dataset_train.target) // 10
             ntest = len(dataset_train.target) - ntrain
@@ -245,7 +251,7 @@ if __name__ == '__main__':
             dataset_test = namedtuple('_', 'data, target')(dataset_train.data[test_idx, :], dataset_train.target[test_idx])
             dataset_train = namedtuple('_', 'data, target')(dataset_train.data[train_idx, :], dataset_train.target[train_idx])
 
-        if verbose >= 1 and iteration == 0:
+        if verbose >= 1:
             print('Training examples:', ntrain)
             print('Test examples:', ntest)
             print('Number of features:', len(dataset_train.data[1, :]))

@@ -339,19 +339,32 @@ def load_default(remove_categorical=False, smaller=False, scaler=True):
         dataset = namedtuple('_', 'data, target')(dataset, default_payment)
     return dataset
 
+
 def load_hepatitis():
     from scipy.stats import mode
     hepatitis = pd.read_csv("./datasets/hepatitis/data.txt", header=-1)
     hepatitis = hepatitis.as_matrix()
     hepatitis = np.where(np.isnan(hepatitis), mode(hepatitis, axis=0), hepatitis)[1]
-    y = hepatitis[:, -1]
+    y = np.array([1.0 if yy == 1 else -1.0 for yy in hepatitis[:, -1]])
     x = hepatitis[:, :-1]
     dataset = namedtuple('_', 'data, target')(x, y)
     return dataset
 
+
+def load_arrhythmia():
+    from scipy.stats import mode
+    arrhythmia = pd.read_csv("./datasets/arrhythmia/arrhythmia.data.txt", header=-1)
+    arrhythmia = arrhythmia.as_matrix()
+    arrhythmia = np.where(np.isnan(arrhythmia), mode(arrhythmia, axis=0), arrhythmia)[1]
+    y = np.array([1.0 if yy == 1 else -1.0 for yy in arrhythmia[:, -1]])
+    x = arrhythmia[:, :-1]
+    dataset = namedtuple('_', 'data, target')(x, y)
+    return dataset
+
 if __name__ == "__main__":
-    load_hepatitis()
-    load_default()
+    d = load_arrhythmia()
+    # print(d.data)
+    # print(d.target)
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)
