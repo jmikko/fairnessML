@@ -217,7 +217,7 @@ if __name__ == '__main__':
             if verbose >= 1 and iteration == 0:
                 print('Different values of the sensible feature', sensible_feature, ':',
                       set(dataset_train.data[:, sensible_feature]))
-        elif experiment_number == 11:
+        elif experiment_number == 12:
             print('Loading Arrhythmia (gender) dataset for task: Normal Vs All-the-others...')
             dataset_train = load_arrhythmia()
             sensible_feature = 2  # gender
