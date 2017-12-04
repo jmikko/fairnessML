@@ -28,6 +28,7 @@ from validation_method import two_step_validation_with_DEO
 
 # Plot a 1D density example
 experiment_number = 1
+bins = 30
 
 smaller_option = True
 verbose = 3
@@ -219,17 +220,16 @@ print('Values:', distance_from_hyperplane)
 xmin = np.min(distance_from_hyperplane)-0.2
 xmax = np.max(distance_from_hyperplane)+0.2
 
-print(best_estimator.predict(Xte))
+print('Predictions:', best_estimator.predict(Xte))
 
 
-bins = 30
 fig, ax = plt.subplots(2, 1)
 ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=1.0)
 ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='Group A0', alpha=0.5)
 ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='Group B0', alpha=0.5)
-ax[0].axvline(x=best_estimator.intercept_, color='k')
-ax[1].axvline(x=best_estimator.intercept_, color='k')
+# ax[0].axvline(x=best_estimator.intercept_, color='k')
+# ax[1].axvline(x=best_estimator.intercept_, color='k')
 ax[0].legend(loc='upper left')
 ax[1].legend(loc='upper left')
 ax[0].set_xlim(left=xmin, right=xmax)
@@ -241,8 +241,8 @@ fig, ax = plt.subplots()
 pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
 ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=0.5)
-ax.axvline(x=best_estimator.intercept_, color='k')
-print('SVM intercept:', best_estimator.intercept_)
+# ax.axvline(x=best_estimator.intercept_, color='k')
+# print('SVM intercept:', best_estimator.intercept_)
 ax.legend(loc='upper left')
 ax.set_xlim(left=xmin, right=xmax)
 plt.title('Dataset #%d - SVM' % experiment_number)
@@ -273,16 +273,16 @@ idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensi
 print('Fair Values:', distance_from_hyperplane)
 xmin = np.min(distance_from_hyperplane)-0.2
 xmax = np.max(distance_from_hyperplane)+0.2
+print('Predictions:', best_estimator.predict(new_dataset_test.data))
 
 
-bins = 10
 fig, ax = plt.subplots(2, 1)
 ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=1.0)
 ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='Group A0', alpha=0.5)
 ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='Group B0', alpha=0.5)
-ax[0].axvline(x=best_estimator.intercept_, color='k')
-ax[1].axvline(x=best_estimator.intercept_, color='k')
+# ax[0].axvline(x=best_estimator.intercept_, color='k')
+# ax[1].axvline(x=best_estimator.intercept_, color='k')
 ax[0].legend(loc='upper left')
 ax[1].legend(loc='upper left')
 ax[0].set_xlim(left=xmin, right=xmax)
@@ -294,8 +294,8 @@ fig, ax = plt.subplots()
 pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
 ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=0.5)
-ax.axvline(x=best_estimator.intercept_, color='k')
-print('Fair SVM intercept:', best_estimator.intercept_)
+# ax.axvline(x=best_estimator.intercept_, color='k')
+# print('Fair SVM intercept:', best_estimator.intercept_)
 ax.legend(loc='upper left')
 ax.set_xlim(left=xmin, right=xmax)
 plt.title('Dataset #%d - SVM FAIR' % experiment_number)
