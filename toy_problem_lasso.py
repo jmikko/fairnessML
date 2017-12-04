@@ -8,6 +8,13 @@ from collections import namedtuple
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import KFold
 from sklearn.linear_model import Lasso
+from validation_method import two_step_validation_with_DEO
+from collections import namedtuple
+
+
+class LassoC(Lasso):
+    def predict(self, X):
+        return np.sign(np.sign(super().predict(X)) + 0.1)
 
 
 def plot_hyperplane(clf, min_x, max_x, linestyle, label):
@@ -27,11 +34,11 @@ training_output = True
 test_output = True
 
 # Number of samples per component
-n_samples = 100
-n_samples_low = 20
+n_samples = 100 * 2
+n_samples_low = 20 * 2
 
 lasso_dataset = True
-number_of_random_features = 1000
+number_of_random_features = 100
 lasso_algorithm = True
 
 # Generate random sample, two components
@@ -63,7 +70,7 @@ sensible_feature.shape = (len(sensible_feature), 1)
 X = np.hstack([X, sensible_feature])
 sensible_feature_id = len(X[1, :]) - 1
 # Labels
-y = [1] * n_samples + [-1] * n_samples + [1] * n_samples_low + [-1] * n_samples
+y = [1.0] * n_samples + [-1.0] * n_samples + [1.0] * n_samples_low + [-1.0] * n_samples
 y = np.array(y)
 
 # TEST DATASET
@@ -78,19 +85,21 @@ if lasso_dataset:
 # Sensitive feature
 X_test = np.hstack([X_test, sensible_feature])
 # Labels
-y_test = [1] * n_samples + [-1] * n_samples + [1] * n_samples_low + [-1] * n_samples
-y_test = np.array(y)
+y_test = [1.0] * n_samples + [-1.0] * n_samples + [1.0] * n_samples_low + [-1.0] * n_samples
+y_test = np.array(y_test)
 
-cv = KFold(n_splits=10, shuffle=False, random_state=1)
+
 if lasso_algorithm:
-    basesvc = Lasso(alpha=1.0, fit_intercept=True)
+    basesvc = LassoC(alpha=1.0, fit_intercept=True)
     param_grid_linear = [{'alpha': np.logspace(-2, 2, 10)}]
 else:
     basesvc = svm.LinearSVC(C=10.0, fit_intercept=True)#, class_weight="balanced")
     param_grid_linear = [{'C': np.logspace(-2, 2, 10)}]
-svcGS = GridSearchCV(estimator=basesvc, cv=cv, param_grid=param_grid_linear, n_jobs=2)
-svcGS.fit(X, y)
-svc = svcGS.best_estimator_
+
+dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
+dataset_train = namedtuple('_', 'data, target')(X, y)
+score, svc = two_step_validation_with_DEO(dataset_train, dataset_test, basesvc, verbose=4, n_jobs=1,
+                                          sensible_feature=sensible_feature_id, params=param_grid_linear)
 
 if training_output:
     plt.figure(1)
@@ -130,8 +139,9 @@ if test_output:
     tpr_pred = fair_tpr_from_precomputed(y_test, prediction, subgropus_idxs)
     print('with EO:', tpr_pred)
 
-svcGS.fit(X[idx_A, :], y[idx_A])
-svc = svcGS.best_estimator_
+dataset_train = namedtuple('_', 'data, target')(X[idx_A, :], y[idx_A])
+score, svc = two_step_validation_with_DEO(dataset_train, dataset_test, basesvc, verbose=4, n_jobs=2,
+                                          sensible_feature=sensible_feature_id, params=param_grid_linear)
 if training_output:
     plt.figure(1)
     plot_hyperplane(svc, min_x, max_x, 'r-.', 'Group A Boundary')
@@ -163,9 +173,9 @@ if test_output:
     prediction = np.sign(np.sign(prediction) + 0.1)
     print('Test Accuracy group A on group B:', accuracy_score(y_test[idx_B], prediction))
 
-
-svcGS.fit(X[idx_B, :], y[idx_B])
-svc = svcGS.best_estimator_
+dataset_train = namedtuple('_', 'data, target')(X[idx_B, :], y[idx_B])
+score, svc = two_step_validation_with_DEO(dataset_train, dataset_test, basesvc, verbose=4, n_jobs=2,
+                                          sensible_feature=sensible_feature_id, params=param_grid_linear)
 if training_output:
     plt.figure(1)
     plot_hyperplane(svc, min_x, max_x, 'b-.', 'Group B Boundary')
@@ -201,21 +211,37 @@ print('\n')
 dataset = namedtuple('_', 'data, target')(X, y)
 algorithm = UncorrelationMethod(dataset, svc, sensible_feature_id)
 algorithm.fit()
+
+dataset_train = namedtuple('_', 'data, target')(X, y)
+list_of_sensible_feature_test = dataset_test.data[:, sensible_feature]
+list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
+algorithm = UncorrelationMethod(dataset_train, model=None, sensible_feature=sensible_feature_id)
+new_dataset_train = algorithm.new_representation(dataset_train.data)
+new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
+new_dataset_test = algorithm.new_representation(dataset_test.data)
+new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
+score, algorithm = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc, verbose=4,
+                                                     n_jobs=2,
+                                                     sensible_feature=sensible_feature_id, params=param_grid_linear,
+                                                     list_of_sensible_feature=[x[sensible_feature_id] for x in
+                                                                               dataset_train.data])
+
+
 if training_output:
     plt.figure(1)
     plot_hyperplane(algorithm, min_x, max_x, 'g-.', 'Fair Boundary')
-    prediction = algorithm.predict(X)
+    prediction = algorithm.predict(new_dataset_train.data)
     prediction = np.sign(np.sign(prediction) + 0.1)
     print('\nFair Train Accuracy group A for all the examples:', accuracy_score(y, prediction))
     subgropus_idxs = subgrups_sensible_feature_data(X, sensible_feature_id)
     tpr_pred = fair_tpr_from_precomputed(y, prediction, subgropus_idxs)
     print('with EO:', tpr_pred)
-    print('Coeff:', svc.coef_.ravel())
+    print('Coeff:', algorithm.coef_.ravel())
 
 if test_output:
     plt.figure(2)
     plot_hyperplane(algorithm, min_x, max_x, 'g-.', 'Fair Boundary')
-    prediction = algorithm.predict(X_test)
+    prediction = algorithm.predict(new_dataset_test.data)
     prediction = np.sign(np.sign(prediction) + 0.1)
     print('\nFair Test Accuracy group A for all the examples:', accuracy_score(y_test, prediction))
     subgropus_idxs = subgrups_sensible_feature_data(X_test, sensible_feature_id)

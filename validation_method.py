@@ -24,13 +24,14 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
     cv = KFold(n_splits=10, shuffle=False, random_state=random_state)
     clf = GridSearchCV(estimator=estimator, cv=cv, param_grid=params, n_jobs=n_jobs,
                        scoring=make_scorer(scorer))
+
     clf.fit(dataset_train.data, dataset_train.target)
 
     if verbose >= 2:
         print('Best score:', clf.best_score_)
         print('params:', clf.cv_results_['params'])
-        print('Best C:', clf.best_estimator_.C)
-        print('Best kernel:', clf.best_estimator_.kernel)
+        if hasattr(clf.best_estimator_, 'C'): print('Best C:', clf.best_estimator_.C)
+        if hasattr(clf.best_estimator_, 'kernel'): print('Best kernel:', clf.best_estimator_.kernel)
         print('Means test score:', clf.cv_results_['mean_test_score'])
 
     max_accuracy = clf.best_score_
