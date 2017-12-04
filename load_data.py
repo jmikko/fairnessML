@@ -368,7 +368,7 @@ def load_arrhythmia():
     return dataset
 
 if __name__ == "__main__":
-    for loadf in [load_heart_uci, load_binary_diabetes_uci ,load_breast_cancer, laod_propublica_fairml_hotencoded, laod_propublica_fairml,
+    for loadf in [load_heart_uci, load_binary_diabetes_uci, load_breast_cancer, laod_propublica_fairml_hotencoded, laod_propublica_fairml,
                   laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia]:
         print('Load function:', loadf)
         data = loadf()
