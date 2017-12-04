@@ -57,7 +57,7 @@ def load_binary_diabetes_uci():
 
 def load_breast_cancer():
     dataset = sklearn.datasets.load_breast_cancer()
-    # dataset.target = [y for y in dataset.target]
+    dataset.target = np.array([1.0 if y == 1 else -1.0for y in dataset.target])
     return dataset
 
 
@@ -217,6 +217,7 @@ def load_adult_race_white_vs_black(smaller=False, scaler=True, balanced=False):
         data_test.data[idx][8] = 1.0 if data_test.data[idx][8] == A1_val else -1.0
     return data_train, data_test
 
+
 def laod_propublica_fairml_hotencoded():
     """ Features:
     0. Two_yr_Recidivism
@@ -238,6 +239,7 @@ def laod_propublica_fairml_hotencoded():
                                   "propublica_data_for_fairml.csv")
     # quick data processing
     compas_rating = propublica_data.score_factor.values
+    compas_rating = np.array([1.0 if y > 0 else -1.0 for y in compas_rating])
     propublica_data = propublica_data.drop("score_factor", 1)
 
     newFemale = [val if val == 1.0 else -1.0 for val in propublica_data.Female.values]
@@ -246,6 +248,7 @@ def laod_propublica_fairml_hotencoded():
 
     dataset = namedtuple('_', 'data, target')(np.array(propublica_data.values), np.array(compas_rating))
     return dataset
+
 
 def laod_propublica_fairml():
     """ Features:
@@ -265,6 +268,7 @@ def laod_propublica_fairml():
                                   "propublica_data_for_fairml.csv")
     # quick data processing
     compas_rating = propublica_data.score_factor.values
+    compas_rating = np.array([1.0 if y > 0 else -1.0 for y in compas_rating])
     propublica_data = propublica_data.drop("score_factor", 1)
 
     black_race_list = propublica_data.African_American.values * 1
@@ -286,6 +290,7 @@ def laod_propublica_fairml():
     dataset = namedtuple('_', 'data, target')(np.array(propublica_data.values), np.array(compas_rating))
     return dataset
 
+
 def laod_propublica_fairml_race(A1=[1]):
     '''
     Values of the feature number 6:
@@ -300,6 +305,7 @@ def laod_propublica_fairml_race(A1=[1]):
     for idx in range(len(dataset.data)):
         dataset.data[idx][6] = 1.0 if dataset.data[idx][6] in A1 else -1.0
     return dataset
+
 
 def load_default(remove_categorical=False, smaller=False, scaler=True):
     '''
@@ -362,9 +368,33 @@ def load_arrhythmia():
     return dataset
 
 if __name__ == "__main__":
-    d = load_arrhythmia()
-    # print(d.data)
-    # print(d.target)
+    for loadf in [load_heart_uci, load_binary_diabetes_uci ,load_breast_cancer, laod_propublica_fairml_hotencoded, laod_propublica_fairml,
+                  laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia]:
+        print('Load function:', loadf)
+        data = loadf()
+        print('Train examples # =', len(data.target), '       pos | neg =', len([0.0 for val in data.target if val == 1]), '|',
+              len([0.0 for val in data.target if val == -1]))
+        print(data.data[0, :], data.target[0])
+        print(data.data[1, :], data.target[1])
+        print(data.data[2, :], data.target[2])
+        for i in range(len(data.data[1, :])):
+            print(i, '# =', len(set(data.data[:, i])))
+        print('\n\n\n')
+
+    for loadf in [load_adult, load_adult_race, load_adult_race_white_vs_black]:
+        data, data_test = loadf()
+        print('Train examples #', len(data.target), 'pos | neg :', len([0.0 for val in data.target if val == 1]), '|',
+              len([0.0 for val in data.target if val == -1]))
+        print('Test examples #', len(data_test.target), 'pos | neg :',
+              len([0.0 for val in data_test.target if val == 1]), '|',
+              len([0.0 for val in data_test.target if val == -1]))
+        print(data.data[0, :], data.target[0])
+        print(data.data[1, :], data.target[1])
+        print(data.data[2, :], data.target[2])
+        for i in range(len(data.data[1, :])):
+            print(i, '# =', len(set(data.data[:, i])))
+        print('\n\n\n')
+
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)
