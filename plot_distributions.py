@@ -153,6 +153,14 @@ if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12]:
     dataset_train = namedtuple('_', 'data, target')(dataset_train.data[train_idx, :], dataset_train.target[train_idx])
 
 
+swap_labels = False
+if swap_labels:
+    print('Labels => SWAPPED!')
+    ypos = np.max(dataset_train.target)
+    yneg = np.min(dataset_train.target)
+    dataset_train.target = np.array([ypos if yy == yneg else yneg for yy in dataset_train.target])
+    dataset_test.target = np.array([ypos if yy == yneg else yneg for yy in dataset_test.target])
+
 grid_search_complete = True
 n_jobs = 2
 
@@ -200,7 +208,7 @@ svc = svm.SVC()
 score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc, verbose=verbose,
                                                      n_jobs=n_jobs,
                                                      sensible_feature=sensible_feature, params=param_grid_linear)
-distance_from_hyperplane = svc.decision_function(Xte)
+distance_from_hyperplane = best_estimator.decision_function(Xte)
 idx_group_A1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == ypos]
 idx_group_B1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == ypos]
 idx_group_A0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == yneg]
@@ -211,29 +219,85 @@ print('Values:', distance_from_hyperplane)
 xmin = np.min(distance_from_hyperplane)-0.2
 xmax = np.max(distance_from_hyperplane)+0.2
 
+print(best_estimator.predict(Xte))
 
-bins = 100
+
+bins = 30
 fig, ax = plt.subplots(2, 1)
 ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=1.0)
 ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='Group A0', alpha=0.5)
 ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='Group B0', alpha=0.5)
-ax[0].axvline(x=svc.intercept_, color='k')
-ax[1].axvline(x=svc.intercept_, color='k')
+ax[0].axvline(x=best_estimator.intercept_, color='k')
+ax[1].axvline(x=best_estimator.intercept_, color='k')
 ax[0].legend(loc='upper left')
 ax[1].legend(loc='upper left')
 ax[0].set_xlim(left=xmin, right=xmax)
 ax[1].set_xlim(left=xmin, right=xmax)
-plt.title('Dataset #%d' % experiment_number)
+plt.title('Dataset #%d - SVM' % experiment_number)
 
 
 fig, ax = plt.subplots()
 pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
 ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=0.5)
-ax.axvline(x=svc.intercept_, color='k')
+ax.axvline(x=best_estimator.intercept_, color='k')
+print('SVM intercept:', best_estimator.intercept_)
 ax.legend(loc='upper left')
 ax.set_xlim(left=xmin, right=xmax)
-plt.title('Dataset #%d' % experiment_number)
+plt.title('Dataset #%d - SVM' % experiment_number)
+
+
+
+print('Linear Fair SVM...')
+# Train an SVM using the training set
+print('\nGrid search for the Fair Linear SVM...')
+svc = svm.SVC()
+algorithm = UncorrelationMethod(dataset_train, model=None, sensible_feature=sensible_feature)
+new_dataset_train = algorithm.new_representation(dataset_train.data)
+new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
+new_dataset_test = algorithm.new_representation(dataset_test.data)
+new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
+score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_dataset_test, svc, verbose=verbose,
+                                                     n_jobs=n_jobs,
+                                                     sensible_feature=sensible_feature, params=param_grid_linear,
+                                                     list_of_sensible_feature=[x[sensible_feature] for x in
+                                                                               dataset_train.data])
+distance_from_hyperplane = best_estimator.decision_function(new_dataset_test.data)
+idx_group_A1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == ypos]
+idx_group_B1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == ypos]
+idx_group_A0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == yneg]
+idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == yneg]
+
+
+print('Fair Values:', distance_from_hyperplane)
+xmin = np.min(distance_from_hyperplane)-0.2
+xmax = np.max(distance_from_hyperplane)+0.2
+
+
+bins = 10
+fig, ax = plt.subplots(2, 1)
+ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
+ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=1.0)
+ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='Group A0', alpha=0.5)
+ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='Group B0', alpha=0.5)
+ax[0].axvline(x=best_estimator.intercept_, color='k')
+ax[1].axvline(x=best_estimator.intercept_, color='k')
+ax[0].legend(loc='upper left')
+ax[1].legend(loc='upper left')
+ax[0].set_xlim(left=xmin, right=xmax)
+ax[1].set_xlim(left=xmin, right=xmax)
+plt.title('Dataset #%d - SVM FAIR' % experiment_number)
+
+
+fig, ax = plt.subplots()
+pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
+# print(np.sum(pdf * np.diff(bins))) # it has to be 1!
+ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=0.5)
+ax.axvline(x=best_estimator.intercept_, color='k')
+print('Fair SVM intercept:', best_estimator.intercept_)
+ax.legend(loc='upper left')
+ax.set_xlim(left=xmin, right=xmax)
+plt.title('Dataset #%d - SVM FAIR' % experiment_number)
 
 plt.show()

@@ -21,6 +21,7 @@ from sklearn.metrics import recall_score
 from sklearn.metrics.classification import _check_targets
 from sklearn.metrics import make_scorer
 from validation_method import two_step_validation_with_DEO
+from sklearn.model_selection import KFold
 
 # ---------------------------------------------------------------------------------- #
 # ---------------------------------------------------------------------------------- #
@@ -67,7 +68,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 if __name__ == '__main__':
     # Experimental settings
-    experiment_number = 11
+    experiment_number = 0
     smaller_option = False
     accuracy_balanced = False
     verbose = 3
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 
     linear = True
     zafar = False
-    not_linear = False
+    not_linear = True
 
 
     grid_search_complete = True
@@ -113,12 +114,12 @@ if __name__ == '__main__':
 
     # ********************************************************************************************
 
-    accuracy_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
-    accuracy_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
-    eq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
-    eq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
-    peq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
-    peq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmK': [], 'ourK': []}
+    accuracy_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
+    accuracy_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
+    eq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
+    eq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
+    peq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
+    peq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
 
     print('Experimental settings')
     print('Parameter Grid Search for Linear')
@@ -270,6 +271,42 @@ if __name__ == '__main__':
             print('Label True:', len([el for idx, el in enumerate(dataset_test.data) if el[sensible_feature] == val0 and dataset_test.target[idx] == 1]))
 
         if linear:
+            # Train an SVM using the training set
+            print('\nGrid search for the standard Linear SVM with standard validation...')
+            svc = svm.SVC()
+            cv = KFold(n_splits=10, shuffle=False, random_state=seed)
+            clf = GridSearchCV(estimator=svc, cv=cv, param_grid=param_grid_linear, n_jobs=n_jobs,
+                               scoring=make_scorer(accuracy_score))
+            clf.fit(dataset_train.data, dataset_train.target)
+            best_estimator = clf.best_estimator_
+
+            if verbose >= 3:
+                print('Y_hat:', best_estimator)
+                print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
+                print('All the weights:', best_estimator.coef_[0, :])
+
+            # Accuracy & fairness stats
+            pred = best_estimator.predict(dataset_test.data)
+            pred_train = best_estimator.predict(dataset_train.data)
+
+            acctest = accuracy_score(dataset_test.target, pred)
+            acctrain = accuracy_score(dataset_train.target, pred_train)
+            eqopptest = equalized_odds_measure_TP(dataset_test, best_estimator, [sensible_feature], ylabel=1)
+            eqopptrain = equalized_odds_measure_TP(dataset_train, best_estimator, [sensible_feature], ylabel=1)
+            if verbose >= 2:
+                print('Accuracy train:', acctrain)
+                print('Accuracy test:', acctest)
+                # Fairness measure
+                print('Eq. opp. train: \n', eqopptrain)
+                print('Eq. opp. test: \n', eqopptest)
+
+            accuracy_train['svmV'].append(acctrain)
+            accuracy_test['svmV'].append(acctest)
+            eq_opp_train['svmV'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
+            eq_opp_test['svmV'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
+            peq_opp_train['svmV'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+            peq_opp_test['svmV'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
+
             # Train an SVM using the training set
             print('\nGrid search for the standard Linear SVM...')
             svc = svm.SVC()
@@ -447,6 +484,40 @@ if __name__ == '__main__':
             peq_opp_test['our'].append(np.abs(list(eqopptest[0].values())[0] * list(eqopptest[0].values())[1]))
 
         if not_linear:
+            # Train an SVM using the training set
+            print('\nGrid search for the standard Kernel SVM with standard validation...')
+            svc = svm.SVC()
+            cv = KFold(n_splits=10, shuffle=False, random_state=seed)
+            clf = GridSearchCV(estimator=svc, cv=cv, param_grid=param_grid_all, n_jobs=n_jobs,
+                               scoring=make_scorer(accuracy_score))
+            clf.fit(dataset_train.data, dataset_train.target)
+            best_estimator = clf.best_estimator_
+
+            if verbose >= 3:
+                print('Y_hat:', best_estimator)
+
+            # Accuracy & fairness stats
+            pred = best_estimator.predict(dataset_test.data)
+            pred_train = best_estimator.predict(dataset_train.data)
+
+            acctest = accuracy_score(dataset_test.target, pred)
+            acctrain = accuracy_score(dataset_train.target, pred_train)
+            eqopptest = equalized_odds_measure_TP(dataset_test, best_estimator, [sensible_feature], ylabel=1)
+            eqopptrain = equalized_odds_measure_TP(dataset_train, best_estimator, [sensible_feature], ylabel=1)
+            if verbose >= 2:
+                print('Accuracy train:', acctrain)
+                print('Accuracy test:', acctest)
+                # Fairness measure
+                print('Eq. opp. train: \n', eqopptrain)
+                print('Eq. opp. test: \n', eqopptest)
+
+            accuracy_train['svmVK'].append(acctrain)
+            accuracy_test['svmVK'].append(acctest)
+            eq_opp_train['svmVK'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
+            eq_opp_test['svmVK'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
+            peq_opp_train['svmVK'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
+            peq_opp_test['svmVK'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
+
             # Train an SVM using the training set
             print('\nGrid search for the standard Kernel SVM...')
             svc = svm.SVC()
@@ -647,6 +718,13 @@ if __name__ == '__main__':
             print('\n\nStats at iteration', iteration + 1)
             print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test \t Prod.Eq.Opp.train \t Prod.Eq.Opp.test')
             if linear:
+                print('SVMV \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                      % (np.mean(accuracy_train['svmV']), np.std(accuracy_train['svmV']),
+                         np.mean(accuracy_test['svmV']), np.std(accuracy_test['svmV']),
+                         np.mean(eq_opp_train['svmV']), np.std(eq_opp_train['svmV']),
+                         np.mean(eq_opp_test['svmV']), np.std(eq_opp_test['svmV']),
+                         np.mean(peq_opp_train['svmV']), np.std(peq_opp_train['svmV']),
+                         np.mean(peq_opp_test['svmV']), np.std(peq_opp_test['svmV'])))
                 print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                       % (np.mean(accuracy_train['svm']), np.std(accuracy_train['svm']),
                          np.mean(accuracy_test['svm']), np.std(accuracy_test['svm']),
@@ -677,6 +755,13 @@ if __name__ == '__main__':
                          np.mean(peq_opp_train['zafar']), np.std(peq_opp_train['zafar']),
                          np.mean(peq_opp_test['zafar']), np.std(peq_opp_test['zafar'])))
             if not_linear:
+                print('SVMVK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                      % (np.mean(accuracy_train['svmVK']), np.std(accuracy_train['svmVK']),
+                         np.mean(accuracy_test['svmVK']), np.std(accuracy_test['svmVK']),
+                         np.mean(eq_opp_train['svmVK']), np.std(eq_opp_train['svmVK']),
+                         np.mean(eq_opp_test['svmVK']), np.std(eq_opp_test['svmVK']),
+                         np.mean(peq_opp_train['svmVK']), np.std(peq_opp_train['svmVK']),
+                         np.mean(peq_opp_test['svmVK']), np.std(peq_opp_test['svmVK'])))
                 print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
                       % (np.mean(accuracy_train['svmK']), np.std(accuracy_train['svmK']),
                          np.mean(accuracy_test['svmK']), np.std(accuracy_test['svmK']),
@@ -702,6 +787,13 @@ if __name__ == '__main__':
     print('\n\n\n\nFinal stats (after', iteration+1, 'iterations)')
     print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test \t Prod.Eq.Opp.train \t Prod.Eq.Opp.test')
     if linear:
+        print('SVMV \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+              % (np.mean(accuracy_train['svmV']), np.std(accuracy_train['svmV']),
+                 np.mean(accuracy_test['svmV']), np.std(accuracy_test['svmV']),
+                 np.mean(eq_opp_train['svmV']), np.std(eq_opp_train['svmV']),
+                 np.mean(eq_opp_test['svmV']), np.std(eq_opp_test['svmV']),
+                 np.mean(peq_opp_train['svmV']), np.std(peq_opp_train['svmV']),
+                 np.mean(peq_opp_test['svmV']), np.std(peq_opp_test['svmV'])))
         print('SVM \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
               % (np.mean(accuracy_train['svm']), np.std(accuracy_train['svm']),
                  np.mean(accuracy_test['svm']), np.std(accuracy_test['svm']),
@@ -732,6 +824,13 @@ if __name__ == '__main__':
                  np.mean(peq_opp_train['zafar']), np.std(peq_opp_train['zafar']),
                  np.mean(peq_opp_test['zafar']), np.std(peq_opp_test['zafar'])))
     if not_linear:
+        print('SVMVK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+              % (np.mean(accuracy_train['svmVK']), np.std(accuracy_train['svmVK']),
+                 np.mean(accuracy_test['svmVK']), np.std(accuracy_test['svmVK']),
+                 np.mean(eq_opp_train['svmVK']), np.std(eq_opp_train['svmVK']),
+                 np.mean(eq_opp_test['svmVK']), np.std(eq_opp_test['svmVK']),
+                 np.mean(peq_opp_train['svmVK']), np.std(peq_opp_train['svmVK']),
+                 np.mean(peq_opp_test['svmVK']), np.std(peq_opp_test['svmVK'])))
         print('SVMK \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
               % (np.mean(accuracy_train['svmK']), np.std(accuracy_train['svmK']),
                  np.mean(accuracy_test['svmK']), np.std(accuracy_test['svmK']),
