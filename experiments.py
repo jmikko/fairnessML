@@ -72,7 +72,7 @@ if __name__ == '__main__':
     accuracy_balanced = False
     verbose = 3
 
-    number_of_iterations = 30
+    number_of_iterations = 10
 
     linear = True
     zafar = False
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
         if experiment_number in [0, 1]:
             # % for train
-            ntrain = 5 * len(dataset_train.target) // 10
+            ntrain = 9 * len(dataset_train.target) // 10
             ntest = len(dataset_train.target) - ntrain
             permutation = list(range(len(dataset_train.target)))
             np.random.shuffle(permutation)
@@ -240,6 +240,8 @@ if __name__ == '__main__':
         if experiment_number in [2, 3]:
             ntrain = len(dataset_train.target)
             ntest = len(dataset_test.target)
+            number_of_iterations = 1
+            print('Only 1 iteration: train and test already with fixed split!')
         if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12]:
             # % for train
             ntrain = 9 * len(dataset_train.target) // 10

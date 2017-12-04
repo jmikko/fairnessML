@@ -212,7 +212,7 @@ xmin = np.min(distance_from_hyperplane)-0.2
 xmax = np.min(distance_from_hyperplane)+0.2
 
 
-bins = 50
+bins = 100
 fig, ax = plt.subplots(2, 1)
 ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A1', alpha=1.0)
 ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B1', alpha=1.0)
