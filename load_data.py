@@ -395,6 +395,7 @@ if __name__ == "__main__":
             print(i, '# =', len(set(data.data[:, i])))
         print('\n\n\n')
 
+
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)
