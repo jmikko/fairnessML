@@ -209,7 +209,7 @@ idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensi
 
 print('Values:', distance_from_hyperplane)
 xmin = np.min(distance_from_hyperplane)-0.2
-xmax = np.min(distance_from_hyperplane)+0.2
+xmax = np.max(distance_from_hyperplane)+0.2
 
 
 bins = 100
