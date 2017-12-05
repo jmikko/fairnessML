@@ -19,7 +19,7 @@ from toy_problem_lasso import toy_test_generator
 np.random.seed(0)
 param_grid_linear = {'C': np.logspace(-4, 4, 30)}
 
-toytest = False
+toytest = True
 
 if toytest:
     # Dataset
@@ -39,7 +39,7 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 3
+    experiment_number = 12
     iteration = 0
     verbose = 3
     smaller_option = True
@@ -81,6 +81,7 @@ for C in param_grid_linear['C']:
     fair_stats['error'].append(error)
     fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
 
+fig = plt.figure(1)
 plt.plot(fair_stats['error'], fair_stats['deo'], 'o', label='Fair')
 plt.plot(not_fair_stats['error'], not_fair_stats['deo'], 'o', label='Not Fair')
 plt.xlabel('Error')
@@ -88,6 +89,9 @@ plt.ylabel('DEO')
 plt.legend()
 if toytest:
     plt.title('Toy-test')
+    plt.savefig('toytest')
 else:
     plt.title('Experiment # %d' % experiment_number)
+    plt.savefig('experiment-%d' % experiment_number)
 plt.show()
+
