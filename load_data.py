@@ -367,6 +367,159 @@ def load_arrhythmia():
     dataset = namedtuple('_', 'data, target')(x, y)
     return dataset
 
+
+# # # # # # # LOAD EXPERIMENTS
+def load_experiments(experiment_number, smaller_option=False, verbose=0):
+    iteration = 0
+    if experiment_number == 0:
+        print('Loading diabetes dataset...')
+        dataset_train = load_binary_diabetes_uci()
+        dataset_test = load_binary_diabetes_uci()
+        sensible_feature = 1  # sex
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 1:
+        print('Loading heart dataset...')
+        dataset_train = load_heart_uci()
+        dataset_test = load_heart_uci()
+        sensible_feature = 1  # sex
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 2:
+        print('Loading adult (gender) dataset...')
+        dataset_train, dataset_test = load_adult(smaller=smaller_option)
+        sensible_feature = 9  # sex
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 3:
+        print('Loading adult (white vs. other races) dataset...')
+        dataset_train, dataset_test = load_adult_race(smaller=smaller_option)
+        sensible_feature = 8  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 4:
+        print('Loading adult (gender) dataset by splitting the training data...')
+        dataset_train, _ = load_adult(smaller=smaller_option)
+        sensible_feature = 9  # sex
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 5:
+        print('Loading adult (white vs. other races)  dataset by splitting the training data...')
+        dataset_train, _ = load_adult_race(smaller=smaller_option)
+        sensible_feature = 8  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 6:
+        print('Loading adult (white vs. black)  dataset by splitting the training data...')
+        dataset_train, _ = load_adult_race_white_vs_black(smaller=smaller_option)
+        sensible_feature = 8  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 7:
+        print('Loading propublica_fairml (gender) dataset with race not hotencoded...')
+        dataset_train = laod_propublica_fairml()
+        sensible_feature = 4  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 8:
+        print('Loading propublica_fairml (black vs other races) dataset with race not hotencoded...')
+        dataset_train = laod_propublica_fairml_race()
+        sensible_feature = 5  # race
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 9:
+        print('Loading propublica_fairml (gender) dataset with race hotencoded...')
+        dataset_train = laod_propublica_fairml_hotencoded()
+        sensible_feature = 10  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 10:
+        print('Loading Default (gender) dataset [other categoricals are removed!]...')
+        dataset_train = load_default(remove_categorical=True, smaller=smaller_option, scaler=True)
+        sensible_feature = 1  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 11:
+        print('Loading Hepatitis (gender) dataset...')
+        dataset_train = load_hepatitis()
+        sensible_feature = 2  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 12:
+        print('Loading Arrhythmia (gender) dataset for task: Normal Vs All-the-others...')
+        dataset_train = load_arrhythmia()
+        sensible_feature = 1  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+
+    if experiment_number in [0, 1]:
+        # % for train
+        ntrain = 9 * len(dataset_train.target) // 10
+        ntest = len(dataset_train.target) - ntrain
+        permutation = list(range(len(dataset_train.target)))
+        np.random.shuffle(permutation)
+        train_idx = permutation[:ntrain]
+        test_idx = permutation[ntrain:]
+        dataset_train.data = dataset_train.data[train_idx, :]
+        dataset_train.target = dataset_train.target[train_idx]
+        dataset_test.data = dataset_test.data[test_idx, :]
+        dataset_test.target = dataset_test.target[test_idx]
+    if experiment_number in [2, 3]:
+        ntrain = len(dataset_train.target)
+        ntest = len(dataset_test.target)
+        number_of_iterations = 1
+        print('Only 1 iteration: train and test already with fixed split!')
+    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12]:
+        # % for train
+        ntrain = 9 * len(dataset_train.target) // 10
+        ntest = len(dataset_train.target) - ntrain
+        permutation = list(range(len(dataset_train.target)))
+        np.random.shuffle(permutation)
+        train_idx = permutation[:ntrain]
+        test_idx = permutation[ntrain:]
+        dataset_test = namedtuple('_', 'data, target')(dataset_train.data[test_idx, :], dataset_train.target[test_idx])
+        dataset_train = namedtuple('_', 'data, target')(dataset_train.data[train_idx, :],
+                                                        dataset_train.target[train_idx])
+
+    if verbose >= 1:
+        print('Training examples:', ntrain)
+        print('Test examples:', ntest)
+        print('Number of features:', len(dataset_train.data[1, :]))
+        values_of_sensible_feature = list(set(dataset_train.data[:, sensible_feature]))
+        val0 = np.min(values_of_sensible_feature)
+        val1 = np.max(values_of_sensible_feature)
+        print('Examples in training in the first group:',
+              len([el for el in dataset_train.data if el[sensible_feature] == val1]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_train.data) if
+                                  el[sensible_feature] == val1 and dataset_train.target[idx] == 1]))
+        print('Examples in training in the second group:',
+              len([el for el in dataset_train.data if el[sensible_feature] == val0]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_train.data) if
+                                  el[sensible_feature] == val0 and dataset_train.target[idx] == 1]))
+        print('Examples in test in the first group:',
+              len([el for el in dataset_test.data if el[sensible_feature] == val1]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_test.data) if
+                                  el[sensible_feature] == val1 and dataset_test.target[idx] == 1]))
+        print('Examples in test in the second group:',
+              len([el for el in dataset_test.data if el[sensible_feature] == val0]))
+        print('Label True:', len([el for idx, el in enumerate(dataset_test.data) if
+                                  el[sensible_feature] == val0 and dataset_test.target[idx] == 1]))
+
+        return dataset_train, dataset_test, sensible_feature
+
 if __name__ == "__main__":
     for loadf in [load_heart_uci, load_binary_diabetes_uci, load_breast_cancer, laod_propublica_fairml_hotencoded, laod_propublica_fairml,
                   laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia]:
