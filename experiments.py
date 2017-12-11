@@ -137,7 +137,7 @@ if __name__ == '__main__':
             # Train an SVM using the training set
             print('\nGrid search for the standard Linear SVM with standard validation...')
             svc = svm.SVC()
-            cv = KFold(n_splits=10, shuffle=False, random_state=seed)
+            cv = KFold(n_splits=5, shuffle=False, random_state=seed)
             clf = GridSearchCV(estimator=svc, cv=cv, param_grid=param_grid_linear, n_jobs=n_jobs,
                                scoring=make_scorer(accuracy_score))
             clf.fit(dataset_train.data, dataset_train.target)
@@ -350,7 +350,7 @@ if __name__ == '__main__':
             # Train an SVM using the training set
             print('\nGrid search for the standard Kernel SVM with standard validation...')
             svc = svm.SVC()
-            cv = KFold(n_splits=10, shuffle=False, random_state=seed)
+            cv = KFold(n_splits=5, shuffle=False, random_state=seed)
             clf = GridSearchCV(estimator=svc, cv=cv, param_grid=param_grid_all, n_jobs=n_jobs,
                                scoring=make_scorer(accuracy_score))
             clf.fit(dataset_train.data, dataset_train.target)
