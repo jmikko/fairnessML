@@ -82,9 +82,9 @@ for C in param_grid_linear['C']:
     fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
 
 
-SMALL_SIZE = 15
-MEDIUM_SIZE = 20
-BIGGER_SIZE = 25
+SMALL_SIZE = 25
+MEDIUM_SIZE = 25
+BIGGER_SIZE = 28
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -93,7 +93,7 @@ plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 
-fig = plt.figure(1, figsize=(8, 6), dpi=80)
+fig = plt.figure(1, figsize=(9, 8), dpi=80)
 ax = plt.subplot(111)
 plt.plot(fair_stats['error'], fair_stats['deo'], 'o', markersize=15, label='Our method')
 plt.plot(not_fair_stats['error'], not_fair_stats['deo'], '*', markersize=15, label='SVM')

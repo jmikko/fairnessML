@@ -26,9 +26,9 @@ from validation_method import two_step_validation_with_DEO
 from toy_problem_lasso import toy_test_generator
 
 
-SMALL_SIZE = 15
-MEDIUM_SIZE = 20
-BIGGER_SIZE = 25
+SMALL_SIZE = 25
+MEDIUM_SIZE = 25
+BIGGER_SIZE = 28
 
 bins = 15
 # Plot a 1D density example
@@ -141,10 +141,10 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
-ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A, Y=1', alpha=1.0)
-ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B, Y=1', alpha=1.0)
-ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='Group A, Y=0', alpha=0.5)
-ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='Group B, Y=0', alpha=0.5)
+ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
+ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=1.0)
+ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='A, Y=0', alpha=0.5)
+ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='B, Y=0', alpha=0.5)
 # ax[0].axvline(x=best_estimator.intercept_, color='k')
 # ax[1].axvline(x=best_estimator.intercept_, color='k')
 ax[0].legend(loc='upper left')
@@ -162,9 +162,9 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
-pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A, Y=1', alpha=1.0)
+pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
-ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B, Y=1', alpha=0.5)
+ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=0.5)
 # ax.axvline(x=best_estimator.intercept_, color='k')
 # print('SVM intercept:', best_estimator.intercept_)
 ax.legend(loc='upper left')
@@ -201,8 +201,8 @@ idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensi
 
 
 print('Fair Values:', distance_from_hyperplane)
-xmin = np.min(distance_from_hyperplane)-0.2
-xmax = np.max(distance_from_hyperplane)+0.2
+#xmin = np.min(distance_from_hyperplane)
+#xmax = np.max(distance_from_hyperplane)
 print('Predictions:', best_estimator.predict(new_dataset_test.data))
 
 
@@ -214,10 +214,10 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
-ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A, Y=1', alpha=1.0)
-ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B, Y=1', alpha=1.0)
-ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='Group A, Y=0', alpha=0.5)
-ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='Group B, Y=0', alpha=0.5)
+ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
+ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=1.0)
+ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='A, Y=0', alpha=0.5)
+ax[1].hist(distance_from_hyperplane[idx_group_B0], bins=bins, normed=True, stacked=True, label='B, Y=0', alpha=0.5)
 # ax[0].axvline(x=best_estimator.intercept_, color='k')
 # ax[1].axvline(x=best_estimator.intercept_, color='k')
 ax[0].legend(loc='upper left')
@@ -235,9 +235,9 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
-pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='Group A, Y=1', alpha=1.0)
+pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
-ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='Group B, Y=1', alpha=0.5)
+ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=0.5)
 # ax.axvline(x=best_estimator.intercept_, color='k')
 # print('Fair SVM intercept:', best_estimator.intercept_)
 ax.legend(loc='upper left')

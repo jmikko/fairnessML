@@ -393,6 +393,18 @@ def load_german():
     return dataset
 
 
+def load_drug():
+    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+    g = pd.read_csv("./datasets/drug/drug_consumption.data.txt", header=-1, sep=',')
+    data = g.as_matrix()[:, 1:-19]  # Remove the ID and labels
+    data = np.array(data)
+    labels = g.as_matrix()[:, 11:]
+    ytrue_value = 'CL0'
+    y = np.array([1.0 if yy == ytrue_value else -1.0 for yy in labels[:, 18]])
+    dataset = namedtuple('_', 'data, target')(data, y)
+    return dataset
+
+
 # # # # # # # LOAD EXPERIMENTS
 def load_experiments(experiment_number, smaller_option=False, verbose=0):
     iteration = 0
@@ -554,7 +566,7 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
 
 if __name__ == "__main__":
     for loadf in [load_heart_uci, load_binary_diabetes_uci, load_breast_cancer, laod_propublica_fairml_hotencoded, laod_propublica_fairml,
-                  laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia, load_german]:
+                  laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia, load_german, load_drug]:
         print('Load function:', loadf)
         data = loadf()
         print('Train examples # =', len(data.target), '       pos | neg =', len([0.0 for val in data.target if val == 1]), '|',
@@ -584,8 +596,8 @@ if __name__ == "__main__":
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)
-    #data = load_german()
-    #data_test = data
+    # data = load_drug()
+    # data_test = data
 
     print('Train examples #', len(data.target), 'pos | neg :', len([0.0 for val in data.target if val == 1]), '|', len([0.0 for val in data.target if val == -1]))
     print('Test examples #', len(data_test.target), 'pos | neg :', len([0.0 for val in data_test.target if val == 1]), '|', len([0.0 for val in data_test.target if val == -1]))
