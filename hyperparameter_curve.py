@@ -17,7 +17,7 @@ from collections import namedtuple
 from toy_problem_lasso import toy_test_generator
 
 np.random.seed(0)
-param_grid_linear = {'C': np.logspace(-4, 4, 30)}
+param_grid_linear = {'C': np.logspace(-6, 6, 40)}
 
 toytest = False
 
@@ -39,7 +39,7 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 13
+    experiment_number = 14
     iteration = 0
     verbose = 3
     smaller_option = True

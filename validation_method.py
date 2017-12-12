@@ -46,7 +46,7 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
 
     inner_validation_list = []
     inner_validation_dict = {}
-    for param in params_accepted:
+    for param in params_accepted:  # TODO: make this loop parallel!
         inner_inner_DEO = []
         cv = KFold(n_splits=5, shuffle=False, random_state=random_state_inner)
         cv_split = cv.split(dataset_train.data)

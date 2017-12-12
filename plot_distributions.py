@@ -32,9 +32,9 @@ BIGGER_SIZE = 28
 
 bins = 15
 # Plot a 1D density example
-toytest = True
+toytest = False
 
-experiment_number = 1
+experiment_number = 13
 smaller_option = True
 verbose = 3
 iteration = 0
