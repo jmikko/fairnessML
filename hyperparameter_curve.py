@@ -19,7 +19,7 @@ from toy_problem_lasso import toy_test_generator
 np.random.seed(0)
 param_grid_linear = {'C': np.logspace(-4, 4, 30)}
 
-toytest = True
+toytest = False
 
 if toytest:
     # Dataset
@@ -39,7 +39,7 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 12
+    experiment_number = 13
     iteration = 0
     verbose = 3
     smaller_option = True
@@ -47,8 +47,8 @@ else:
                                                                         smaller_option,
                                                                         verbose)
 
-not_fair_stats = {'error': [], 'deo': []}
-fair_stats = {'error': [], 'deo': []}
+not_fair_stats = {'error': [], 'deo': [], 'EO_prod': []}
+fair_stats = {'error': [], 'deo': [], 'EO_prod': []}
 
 # Not fair err\deo values:
 for C in param_grid_linear['C']:
@@ -62,6 +62,7 @@ for C in param_grid_linear['C']:
     val1 = np.max(list(deo.keys()))
     not_fair_stats['error'].append(error)
     not_fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+    #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
 
 # Fair err\deo values:
 for C in param_grid_linear['C']:
@@ -80,7 +81,10 @@ for C in param_grid_linear['C']:
     val1 = np.max(list(deo.keys()))
     fair_stats['error'].append(error)
     fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+    #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
 
+print('SVM STATS:', not_fair_stats)
+print('Fair-SVM STATS:', fair_stats)
 
 SMALL_SIZE = 25
 MEDIUM_SIZE = 25

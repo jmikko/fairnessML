@@ -396,11 +396,11 @@ def load_german():
 def load_drug():
     from sklearn.preprocessing import LabelEncoder, OneHotEncoder
     g = pd.read_csv("./datasets/drug/drug_consumption.data.txt", header=-1, sep=',')
-    data = g.as_matrix()[:, 1:-19]  # Remove the ID and labels
-    data = np.array(data)
-    labels = g.as_matrix()[:, 11:]
-    ytrue_value = 'CL0'
-    y = np.array([1.0 if yy == ytrue_value else -1.0 for yy in labels[:, 18]])
+    g = np.array(g.as_matrix())
+    data = g[:, 1:13]  # Remove the ID and labels
+    labels = g[:, 13:]
+    yfalse_value = 'CL0'
+    y = np.array([-1.0 if yy == yfalse_value else 1.0 for yy in labels[:, 5]])
     dataset = namedtuple('_', 'data, target')(data, y)
     return dataset
 
@@ -508,6 +508,15 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 14:
+        print('Loading Drug (black vs others) dataset... [task 16]')
+        dataset_train = load_drug()
+        sensible_feature = 4  # ethnicity
+        print(dataset_train.data[:, sensible_feature])
+        dataset_train.data[:, sensible_feature] = [1.0 if el == -0.31685 else -1.0 for el in dataset_train.data[:, sensible_feature]]
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
 
     if experiment_number in [0, 1]:
         # % for train
@@ -526,7 +535,7 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         ntest = len(dataset_test.target)
         number_of_iterations = 1
         print('Only 1 iteration: train and test already with fixed split!')
-    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
+    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
         # % for train
         ntrain = 9 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
@@ -596,8 +605,7 @@ if __name__ == "__main__":
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)
-    # data = load_drug()
-    # data_test = data
+    #  data, data_test, sensible_feature = load_experiments(14, verbose=2)
 
     print('Train examples #', len(data.target), 'pos | neg :', len([0.0 for val in data.target if val == 1]), '|', len([0.0 for val in data.target if val == -1]))
     print('Test examples #', len(data_test.target), 'pos | neg :', len([0.0 for val in data_test.target if val == 1]), '|', len([0.0 for val in data_test.target if val == -1]))
