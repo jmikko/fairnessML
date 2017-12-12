@@ -368,6 +368,31 @@ def load_arrhythmia():
     return dataset
 
 
+def load_german():
+    from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+    g = pd.read_csv("./datasets/german/german.data.txt", header=-1, sep='\s+')
+    g = g.as_matrix()
+    g = np.array(g, dtype='str')
+    g = LabelEncoder().fit_transform(g.ravel()).reshape(*g.shape)
+    list_of_cat = [0, 2, 3, 5, 6, 8, 9, 11, 13, 14, 16, 18]
+    for i in range(len(g[1, :])):
+        if len(set(g[:, i])) > 2:
+            list_of_cat.append(i)
+    val19_0 = np.min(g[:, 19])  # Foreign\not foreign feature
+    val19_1 = np.max(g[:, 19])
+    for idx, ex in enumerate(g):
+        g[idx, 19] = -1.0 if g[idx, 19] == val19_0 else 1.0
+    list_of_cat = sorted(list(set(list_of_cat)))
+    enc = OneHotEncoder(n_values='auto', categorical_features=list_of_cat, sparse=False, handle_unknown='error')
+    enc.fit(g)
+    g = enc.transform(g)
+    ytrue_value = g[0, -1]
+    y = np.array([1.0 if yy == ytrue_value else -1.0 for yy in g[:, -1]])
+    x = g[:, :-1]
+    dataset = namedtuple('_', 'data, target')(x, y)
+    return dataset
+
+
 # # # # # # # LOAD EXPERIMENTS
 def load_experiments(experiment_number, smaller_option=False, verbose=0):
     iteration = 0
@@ -464,6 +489,13 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 13:
+        print('Loading German (foreign or not) dataset...')
+        dataset_train = load_german()
+        sensible_feature = 19  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
 
     if experiment_number in [0, 1]:
         # % for train
@@ -482,7 +514,7 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         ntest = len(dataset_test.target)
         number_of_iterations = 1
         print('Only 1 iteration: train and test already with fixed split!')
-    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12]:
+    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
         # % for train
         ntrain = 9 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
@@ -522,7 +554,7 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
 
 if __name__ == "__main__":
     for loadf in [load_heart_uci, load_binary_diabetes_uci, load_breast_cancer, laod_propublica_fairml_hotencoded, laod_propublica_fairml,
-                  laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia]:
+                  laod_propublica_fairml_race, load_default, load_hepatitis, load_arrhythmia, load_german]:
         print('Load function:', loadf)
         data = loadf()
         print('Train examples # =', len(data.target), '       pos | neg =', len([0.0 for val in data.target if val == 1]), '|',
@@ -552,6 +584,8 @@ if __name__ == "__main__":
     from sklearn import svm
     #  data = sklearn.datasets.fetch_mldata('iris')
     data, data_test = load_adult_race(smaller=False)
+    #data = load_german()
+    #data_test = data
 
     print('Train examples #', len(data.target), 'pos | neg :', len([0.0 for val in data.target if val == 1]), '|', len([0.0 for val in data.target if val == -1]))
     print('Test examples #', len(data_test.target), 'pos | neg :', len([0.0 for val in data_test.target if val == 1]), '|', len([0.0 for val in data_test.target if val == -1]))
@@ -564,7 +598,7 @@ if __name__ == "__main__":
         print(i, '# =', len(set(data.data[:, i])))
 
     from sklearn.metrics import accuracy_score
-    svc = svm.SVC(C=0.5, class_weight="balanced")
+    svc = svm.SVC(C=10.0, class_weight="balanced")
     svc.fit(data.data, data.target)
     print('Data train #ex #negative ex:', len(data.target), np.count_nonzero(data.target + 1))
     prediction = svc.predict(data.data)
