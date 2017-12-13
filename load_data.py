@@ -387,7 +387,7 @@ def load_german():
     enc.fit(g)
     g = enc.transform(g)
     ytrue_value = g[0, -1]
-    y = np.array([1.0 if yy == ytrue_value else -1.0 for yy in g[:, -1]])
+    y = -np.array([1.0 if yy == ytrue_value else -1.0 for yy in g[:, -1]])
     x = g[:, :-1]
     dataset = namedtuple('_', 'data, target')(x, y)
     return dataset
