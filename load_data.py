@@ -400,12 +400,26 @@ def load_drug():
     data = g[:, 1:13]  # Remove the ID and labels
     labels = g[:, 13:]
     yfalse_value = 'CL0'
-    y = np.array([-1.0 if yy == yfalse_value else 1.0 for yy in labels[:, 5]])
+    y = -np.array([-1.0 if yy == yfalse_value else 1.0 for yy in labels[:, 5]])
     dataset = namedtuple('_', 'data, target')(data, y)
     return dataset
 
 
 # # # # # # # LOAD EXPERIMENTS
+# 1
+# 2
+# 3
+# 4
+# 5
+# 6
+# 7
+# 8
+# 9
+# 10
+# 11
+# 12 Arrhythmia (gender) dataset for task: Normal Vs All-the-others
+# 13
+# 14
 def load_experiments(experiment_number, smaller_option=False, verbose=0):
     iteration = 0
     if experiment_number == 0:

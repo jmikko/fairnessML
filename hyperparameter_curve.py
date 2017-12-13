@@ -15,18 +15,25 @@ from sklearn.linear_model import Lasso
 from validation_method import two_step_validation_with_DEO
 from collections import namedtuple
 from toy_problem_lasso import toy_test_generator
+from sklearn.linear_model import Lasso
+
+
+class LassoC(Lasso):
+    def predict(self, X):
+        return np.sign(np.sign(super().predict(X)) + 0.1)
 
 np.random.seed(0)
 param_grid_linear = {'C': np.logspace(-6, 6, 40)}
 
-toytest = False
+toytest = True
+lasso_algorithm = True
 
 if toytest:
     # Dataset
-    n_samples = 100 * 1
-    n_samples_low = 20 * 1
-    lasso_dataset = False
-    number_of_random_features = 100
+    n_samples = 100 * 10
+    n_samples_low = 20 * 10
+    lasso_dataset = True
+    number_of_random_features = 2000
     varA = 0.8
     aveApos = [-1.0, -1.0]
     aveAneg = [1.0, 1.0]
@@ -50,41 +57,88 @@ else:
 not_fair_stats = {'error': [], 'deo': [], 'EO_prod': []}
 fair_stats = {'error': [], 'deo': [], 'EO_prod': []}
 
-# Not fair err\deo values:
-for C in param_grid_linear['C']:
-    estimator = svm.LinearSVC(C=C, fit_intercept=False)
-    estimator.fit(dataset_train.data, dataset_train.target)
-    prediction = estimator.predict(dataset_test.data)
-    error = 1.0 - accuracy_score(dataset_test.target, prediction)
-    subgropus_idxs = subgrups_sensible_feature_data(dataset_test.data, sensible_feature_id)
-    deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
-    val0 = np.min(list(deo.keys()))
-    val1 = np.max(list(deo.keys()))
-    not_fair_stats['error'].append(error)
-    not_fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
-    #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+if not lasso_algorithm:
+    # Not fair err\deo values:
+    for C in param_grid_linear['C']:
+        estimator = svm.LinearSVC(C=C, fit_intercept=True)
+        estimator.fit(dataset_train.data, dataset_train.target)
+        prediction = estimator.predict(dataset_test.data)
+        error = 1.0 - accuracy_score(dataset_test.target, prediction)
+        subgropus_idxs = subgrups_sensible_feature_data(dataset_test.data, sensible_feature_id)
+        deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
+        val0 = np.min(list(deo.keys()))
+        val1 = np.max(list(deo.keys()))
+        print('Coeff SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
+        not_fair_stats['error'].append(error)
+        not_fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+        #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
 
-# Fair err\deo values:
-for C in param_grid_linear['C']:
-    estimator = svm.LinearSVC(C=C, fit_intercept=False)
-    algorithm = UncorrelationMethod(dataset_train, model=None, sensible_feature=sensible_feature_id)
-    new_dataset_train = algorithm.new_representation(dataset_train.data)
-    new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
-    new_dataset_test = algorithm.new_representation(dataset_test.data)
-    new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
-    estimator.fit(new_dataset_train.data, new_dataset_train.target)
-    prediction = estimator.predict(new_dataset_test.data)
-    error = 1.0 - accuracy_score(dataset_test.target, prediction)
-    subgropus_idxs = subgrups_sensible_feature_data(dataset_test.data, sensible_feature_id)
-    deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
-    val0 = np.min(list(deo.keys()))
-    val1 = np.max(list(deo.keys()))
-    fair_stats['error'].append(error)
-    fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
-    #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+    # Fair err\deo values:
+    for C in param_grid_linear['C']:
+        estimator = svm.LinearSVC(C=C, fit_intercept=True)
+        algorithm = UncorrelationMethod(dataset_train, model=None, sensible_feature=sensible_feature_id)
+        new_dataset_train = algorithm.new_representation(dataset_train.data)
+        new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
+        new_dataset_test = algorithm.new_representation(dataset_test.data)
+        new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
+        estimator.fit(new_dataset_train.data, new_dataset_train.target)
+        prediction = estimator.predict(new_dataset_test.data)
+        error = 1.0 - accuracy_score(dataset_test.target, prediction)
+        subgropus_idxs = subgrups_sensible_feature_data(dataset_test.data, sensible_feature_id)
+        deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
+        val0 = np.min(list(deo.keys()))
+        val1 = np.max(list(deo.keys()))
+        print('Coeff Fair-SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
+        fair_stats['error'].append(error)
+        fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+        #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
 
-print('SVM STATS:', not_fair_stats)
-print('Fair-SVM STATS:', fair_stats)
+else: #LASSO ALGO
+    # Not fair err\deo values:
+    for alpha in param_grid_linear['C']:
+        estimator = LassoC(alpha=alpha, fit_intercept=True)
+        estimator.fit(dataset_train.data, dataset_train.target)
+        prediction = estimator.predict(dataset_test.data)
+        error = 1.0 - accuracy_score(dataset_test.target, prediction)
+        subgropus_idxs = subgrups_sensible_feature_data(dataset_test.data, sensible_feature_id)
+        deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
+        val0 = np.min(list(deo.keys()))
+        val1 = np.max(list(deo.keys()))
+        print('Coeff Lasso near zero (alpha=', alpha, ') :', len([coef for coef in estimator.coef_ if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
+        not_fair_stats['error'].append(error)
+        not_fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+        #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+
+    # Fair err\deo values:
+    for alpha in param_grid_linear['C']:
+        estimator = LassoC(alpha=alpha, fit_intercept=True)
+        algorithm = UncorrelationMethod(dataset_train, model=None, sensible_feature=sensible_feature_id)
+        new_dataset_train = algorithm.new_representation(dataset_train.data)
+        new_dataset_train = namedtuple('_', 'data, target')(new_dataset_train, dataset_train.target)
+        new_dataset_test = algorithm.new_representation(dataset_test.data)
+        new_dataset_test = namedtuple('_', 'data, target')(new_dataset_test, dataset_test.target)
+        estimator.fit(new_dataset_train.data, new_dataset_train.target)
+        prediction = estimator.predict(new_dataset_test.data)
+        error = 1.0 - accuracy_score(dataset_test.target, prediction)
+        subgropus_idxs = subgrups_sensible_feature_data(dataset_test.data, sensible_feature_id)
+        deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
+        val0 = np.min(list(deo.keys()))
+        val1 = np.max(list(deo.keys()))
+        print('Coeff Fair-Lasso near zero (alpha=', alpha, ') :', len([coef for coef in estimator.coef_ if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
+        fair_stats['error'].append(error)
+        fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+        #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+
+print('Not-fair STATS:', not_fair_stats)
+print('Not-fair smallest error:', np.min(not_fair_stats['error']))
+print('Not-fair smallest deo:', np.min(not_fair_stats['deo']))
+print('Fair STATS:', fair_stats)
+print('Fair smallest error:', np.min(fair_stats['error']))
+print('Fair smallest deo:', np.min(fair_stats['deo']))
 
 SMALL_SIZE = 25
 MEDIUM_SIZE = 25
@@ -105,13 +159,20 @@ plt.xlabel('Error')
 plt.ylabel('DEO')
 plt.legend()
 if toytest:
-    plt.title('Toytest')
-    plt.savefig('toytest')
+    if not lasso_dataset:
+        strtitle = 'Toytest'
+    else:
+        strtitle = 'Lasso_Toytest'
+    if lasso_algorithm:
+        strtitle += '-Lasso_Algorithms'
+    plt.title(strtitle)
+    plt.savefig(strtitle)
 else:
-    plt.title('Experiment # %d' % experiment_number)
-    plt.savefig('experiment-%d' % experiment_number)
-
-
+    strtitle = 'Experiment_%d' % experiment_number
+    if lasso_algorithm:
+        strtitle += '-Lasso_ Algorithms'
+    plt.title(strtitle)
+    plt.savefig(strtitle)
 
 plt.show()
 
