@@ -25,7 +25,7 @@ class LassoC(Lasso):
 np.random.seed(0)
 param_grid_linear = {'C': np.logspace(-6, 6, 40)}
 
-toytest = True
+toytest = False
 lasso_algorithm = True
 
 if toytest:
@@ -46,7 +46,7 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 14
+    experiment_number = 12
     iteration = 0
     verbose = 3
     smaller_option = True
