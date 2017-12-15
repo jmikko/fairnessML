@@ -54,8 +54,8 @@ else:
                                                                         smaller_option,
                                                                         verbose)
 
-not_fair_stats = {'error': [], 'deo': [], 'EO_prod': []}
-fair_stats = {'error': [], 'deo': [], 'EO_prod': []}
+not_fair_stats = {'error': [], 'deo': [], 'EO_prod': [], 'deo_approx': []}
+fair_stats = {'error': [], 'deo': [], 'EO_prod': [], 'deo_approx': []}
 
 if not lasso_algorithm:
     # Not fair err\deo values:
@@ -72,6 +72,8 @@ if not lasso_algorithm:
               '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
         not_fair_stats['error'].append(error)
         not_fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+        #adeo0 = np.mean([estimator.]) TODO: approx deo
+        #not_fair_stats['deo_approx'].append(np.abs(0))
         #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
 
     # Fair err\deo values:
