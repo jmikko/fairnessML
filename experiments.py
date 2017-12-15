@@ -66,16 +66,16 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 if __name__ == '__main__':
     # Experimental settings
-    experiment_number = 0
+    experiment_number = 8
     smaller_option = False
     accuracy_balanced = False
     verbose = 3
 
     number_of_iterations = 10
 
-    linear = True
-    zafar = False
-    not_linear = True
+    linear = False
+    zafar = True
+    not_linear = False
 
 
     grid_search_complete = True
@@ -576,6 +576,11 @@ if __name__ == '__main__':
             eq_opp_test['zafar'].append(np.abs(s_attr_to_fp_fn_test_cons["s1"][0.0]["fpr"] - s_attr_to_fp_fn_test_cons["s1"][1.0]["fpr"]))
             peq_opp_train['zafar'].append(np.abs(s_attr_to_fp_fn_train_cons["s1"][0.0]["fpr"] * s_attr_to_fp_fn_train_cons["s1"][1.0]["fpr"]))
             peq_opp_test['zafar'].append(np.abs(s_attr_to_fp_fn_test_cons["s1"][0.0]["fpr"] * s_attr_to_fp_fn_test_cons["s1"][1.0]["fpr"]))
+
+        if verbose >= 2:
+            print('Zafar list of values:')
+            print('For Test:', s_attr_to_fp_fn_test_cons)
+            print('For Train:', s_attr_to_fp_fn_train_cons)
 
         if verbose >= 1 and iteration != number_of_iterations - 1:
             print('\n\nStats at iteration', iteration + 1)

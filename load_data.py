@@ -413,7 +413,7 @@ def load_drug():
 # 5
 # 6
 # 7
-# 8
+# 8 COMPAS (black vs other races) dataset with race not hotencoded
 # 9
 # 10
 # 11
