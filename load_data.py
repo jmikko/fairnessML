@@ -420,6 +420,9 @@ def load_drug():
 # 12 Arrhythmia (gender) dataset for task: Normal Vs All-the-others
 # 13
 # 14
+# 15 Arrhythmia (gender) dataset for task: Normal Vs All-the-others [-50% of training set]
+# 16 Arrhythmia (gender) dataset for task: Normal Vs All-the-others [-75% of training set]
+# 17 Arrhythmia (gender) dataset for task: Normal Vs All-the-others [-12.5 of training set]
 def load_experiments(experiment_number, smaller_option=False, verbose=0):
     iteration = 0
     if experiment_number == 0:
@@ -531,6 +534,27 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         if verbose >= 1 and iteration == 0:
             print('Different values of the sensible feature', sensible_feature, ':',
                   set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 15:
+        print('Loading Arrhythmia (gender) dataset for task: Normal Vs All-the-others... [-25% training set]')
+        dataset_train = load_arrhythmia()
+        sensible_feature = 1  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 16:
+        print('Loading Arrhythmia (gender) dataset for task: Normal Vs All-the-others...[-50% training set]')
+        dataset_train = load_arrhythmia()
+        sensible_feature = 1  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
+    elif experiment_number == 17:
+        print('Loading Arrhythmia (gender) dataset for task: Normal Vs All-the-others...[-75% training set]')
+        dataset_train = load_arrhythmia()
+        sensible_feature = 1  # gender
+        if verbose >= 1 and iteration == 0:
+            print('Different values of the sensible feature', sensible_feature, ':',
+                  set(dataset_train.data[:, sensible_feature]))
 
     if experiment_number in [0, 1]:
         # % for train
@@ -549,10 +573,20 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         ntest = len(dataset_test.target)
         number_of_iterations = 1
         print('Only 1 iteration: train and test already with fixed split!')
-    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+    if experiment_number in [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]:
         # % for train
         ntrain = 9 * len(dataset_train.target) // 10
         ntest = len(dataset_train.target) - ntrain
+        if experiment_number == 15:
+           ntrain = int(ntrain * 0.75)
+           ntest = len(dataset_train.target) - ntrain
+        elif experiment_number == 16:
+            ntrain = int(ntrain * 0.5)
+            ntest = len(dataset_train.target) - ntrain
+        elif experiment_number == 17:
+            ntrain = int(ntrain * 0.25)
+            ntest = len(dataset_train.target) - ntrain
+
         permutation = list(range(len(dataset_train.target)))
         np.random.shuffle(permutation)
         train_idx = permutation[:ntrain]
@@ -560,6 +594,7 @@ def load_experiments(experiment_number, smaller_option=False, verbose=0):
         dataset_test = namedtuple('_', 'data, target')(dataset_train.data[test_idx, :], dataset_train.target[test_idx])
         dataset_train = namedtuple('_', 'data, target')(dataset_train.data[train_idx, :],
                                                         dataset_train.target[train_idx])
+
 
     if verbose >= 1:
         print('Training examples:', ntrain)

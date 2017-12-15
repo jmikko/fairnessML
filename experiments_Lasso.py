@@ -72,7 +72,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 if __name__ == '__main__':
     # Experimental settings
-    experiment_number = 12
+    experiment_number = 15
     smaller_option = False
     accuracy_balanced = False
     verbose = 3
