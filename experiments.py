@@ -66,7 +66,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 
 if __name__ == '__main__':
     # Experimental settings
-    experiment_number = 8
+    experiment_number = 14
     smaller_option = False
     accuracy_balanced = False
     verbose = 3
@@ -526,8 +526,12 @@ if __name__ == '__main__':
             print('\nZafar method...')
             X, y, x_control = dataset_train.data, dataset_train.target, {"s1": dataset_train.data[:, sensible_feature]}
             sensitive_attrs = x_control.keys()
-            x_train, y_train, x_control_train, x_test, y_test, x_control_test = dataset_train.data[:, :sensible_feature] + dataset_train.data[:, sensible_feature+1:], dataset_train.target, {"s1": dataset_train.data[:, sensible_feature]}, \
-                                                                                dataset_test.data[:, :sensible_feature] + dataset_test.data[:, sensible_feature + 1:], dataset_test.target, {"s1": dataset_test.data[:, sensible_feature]}
+            val0 = np.min(dataset_train.data[:, sensible_feature])
+            val1 = np.max(dataset_train.data[:, sensible_feature])
+            new_train_sensitive = np.array([0 if valx == val0 else 1 for valx in dataset_train.data[:, sensible_feature]])
+            new_test_sensitive = np.array([0 if valx == val0 else 1 for valx in dataset_test.data[:, sensible_feature]])
+            x_train, y_train, x_control_train, x_test, y_test, x_control_test = np.hstack((dataset_train.data[:, :sensible_feature], dataset_train.data[:, sensible_feature+1:])), dataset_train.target, {"s1": new_train_sensitive},\
+                                                                                np.hstack((dataset_test.data[:, :sensible_feature], dataset_test.data[:, sensible_feature + 1:])), dataset_test.target, {"s1": new_test_sensitive}
             cons_params = None  # constraint parameters, will use them later
             loss_function = "logreg"  # perform the experiments with logistic regression
             EPS = 1e-4
