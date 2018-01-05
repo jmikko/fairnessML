@@ -22,17 +22,19 @@ class LassoC(Lasso):
     def predict(self, X):
         return np.sign(np.sign(super().predict(X)) + 0.1)
 
-np.random.seed(0)
+np.random.seed(15)
 param_grid_linear = {'C': np.logspace(-6, 6, 40)}
+#param_grid_linear['C'] = param_grid_linear['C'][10:-12]
 
-toytest = False
-lasso_algorithm = True
+toytest = True
+lasso_algorithm = False
+evaluate_approx_on_train = False
 
 if toytest:
     # Dataset
     n_samples = 100 * 10
     n_samples_low = 20 * 10
-    lasso_dataset = True
+    lasso_dataset = False
     number_of_random_features = 2000
     varA = 0.8
     aveApos = [-1.0, -1.0]
@@ -68,13 +70,23 @@ if not lasso_algorithm:
         deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
         val0 = np.min(list(deo.keys()))
         val1 = np.max(list(deo.keys()))
-        print('Coeff SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
-              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
         not_fair_stats['error'].append(error)
         not_fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
-        #adeo0 = np.mean([estimator.]) TODO: approx deo
-        #not_fair_stats['deo_approx'].append(np.abs(0))
+
+        if evaluate_approx_on_train:
+            adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_train.data)
+                             if dataset_train.target[idx] == 1 and dataset_train.data[idx][sensible_feature_id] == val0])
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_train.data)
+                             if dataset_train.target[idx] == 1 and dataset_train.data[idx][sensible_feature_id] == val1])
+        else:
+            adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_test.data)
+                             if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_train.data)
+                             if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
+        not_fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
         #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+        print('Coeff SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]), 'AppDEO:', np.abs(adeo0 - adeo1))
 
     # Fair err\deo values:
     for C in param_grid_linear['C']:
@@ -91,11 +103,23 @@ if not lasso_algorithm:
         deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
         val0 = np.min(list(deo.keys()))
         val1 = np.max(list(deo.keys()))
-        print('Coeff Fair-SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
-              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
         fair_stats['error'].append(error)
         fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
+
+        if evaluate_approx_on_train:
+            adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_train.data)
+                             if dataset_train.target[idx] == 1 and dataset_train.data[idx][sensible_feature_id] == val0])
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_train.data)
+                             if dataset_train.target[idx] == 1 and dataset_train.data[idx][sensible_feature_id] == val1])
+        else:
+            adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_test.data)
+                             if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_test.data)
+                             if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
+        fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
         #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+        print('Coeff Fair-SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]), 'AppDEO:', np.abs(adeo0 - adeo1))
 
 else: #LASSO ALGO
     # Not fair err\deo values:
@@ -175,6 +199,82 @@ else:
         strtitle += '-Lasso_ Algorithms'
     plt.title(strtitle)
     plt.savefig(strtitle)
+
+if not lasso_algorithm:
+    fig = plt.figure(2, figsize=(9, 8), dpi=80)
+    ax = plt.subplot(111)
+    plt.semilogx(param_grid_linear['C'], fair_stats['deo_approx'], '-o', markersize=5, label='Approx DEO')
+    plt.semilogx(param_grid_linear['C'], fair_stats['deo'], '--x', markersize=10, label='DEO')
+    plt.xlabel('C')
+    # plt.ylabel('Value')
+    plt.legend()
+    if toytest:
+        if not lasso_dataset:
+            strtitle = 'Toytest - Our method'
+        else:
+            strtitle = 'Lasso_Toytest - Our method'
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+    else:
+        strtitle = 'Experiment_%d - Our method' % experiment_number
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+
+    fig = plt.figure(3, figsize=(9, 8), dpi=80)
+    ax = plt.subplot(111)
+    plt.semilogx(param_grid_linear['C'], fair_stats['error'], '-D', markersize=5, label='Error')
+    plt.xlabel('C')
+    # plt.ylabel('Value')
+    plt.legend()
+    if toytest:
+        if not lasso_dataset:
+            strtitle = 'Toytest Error - Our method'
+        else:
+            strtitle = 'Lasso_Toytest Error - Our method'
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+    else:
+        strtitle = 'Experiment_%d Error - Our method' % experiment_number
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+
+    fig = plt.figure(4, figsize=(9, 8), dpi=80)
+    ax = plt.subplot(111)
+    plt.semilogx(param_grid_linear['C'], not_fair_stats['deo_approx'], '-o', markersize=5, label='Approx DEO')
+    plt.semilogx(param_grid_linear['C'], not_fair_stats['deo'], '--x', markersize=10, label='DEO')
+    plt.xlabel('C')
+    # plt.ylabel('Value')
+    plt.legend()
+    if toytest:
+        if not lasso_dataset:
+            strtitle = 'Toytest - SVM'
+        else:
+            strtitle = 'Lasso_Toytest - SVM'
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+    else:
+        strtitle = 'Experiment_%d - SVM' % experiment_number
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+
+    fig = plt.figure(5, figsize=(9, 8), dpi=80)
+    ax = plt.subplot(111)
+    plt.semilogx(param_grid_linear['C'], not_fair_stats['error'], '-D', markersize=5, label='Error')
+    plt.xlabel('C')
+    # plt.ylabel('Value')
+    plt.legend()
+    if toytest:
+        if not lasso_dataset:
+            strtitle = 'Toytest Error - SVM'
+        else:
+            strtitle = 'Lasso_Toytest Error - SVM'
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+    else:
+        strtitle = 'Experiment_%d Error - SVM' % experiment_number
+        plt.title(strtitle)
+        plt.savefig(strtitle)
+
 
 plt.show()
 
