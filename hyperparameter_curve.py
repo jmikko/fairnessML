@@ -116,10 +116,13 @@ if not lasso_algorithm:
                              if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
             adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_test.data)
                              if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
+        delta0 = np.abs(adeo0 - deo[val0])
+        delta1 = np.abs(adeo1 - deo[val1])
         fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
         #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
         print('Coeff Fair-SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
-              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]), 'AppDEO:', np.abs(adeo0 - adeo1))
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]), 'AppDEO:', np.abs(adeo0 - adeo1),
+              'Delta0:', delta0, 'Delta1:', delta1)
 
 else: #LASSO ALGO
     # Not fair err\deo values:
