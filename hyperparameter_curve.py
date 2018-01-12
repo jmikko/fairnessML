@@ -26,7 +26,7 @@ np.random.seed(15)
 param_grid_linear = {'C': np.logspace(-6, 6, 40)}
 #param_grid_linear['C'] = param_grid_linear['C'][10:-12]
 
-toytest = True
+toytest = False
 lasso_algorithm = False
 evaluate_approx_on_train = False
 
@@ -48,7 +48,7 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 12
+    experiment_number = 8
     iteration = 0
     verbose = 3
     smaller_option = True
@@ -81,7 +81,7 @@ if not lasso_algorithm:
         else:
             adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_test.data)
                              if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
-            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_train.data)
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(dataset_test.data)
                              if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
         not_fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
         #  not_fair_stats['EO_prod'].append(deo[val0] * deo[val1])
@@ -116,13 +116,13 @@ if not lasso_algorithm:
                              if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
             adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_test.data)
                              if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
-        delta0 = np.abs(adeo0 - deo[val0])
-        delta1 = np.abs(adeo1 - deo[val1])
+        delta0 = np.abs(deo[val0] - 0.5 - adeo0)
+        delta1 = np.abs(deo[val1] - 0.5 - adeo1)
         fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
         #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
         print('Coeff Fair-SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
               '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]), 'AppDEO:', np.abs(adeo0 - adeo1),
-              'Delta0:', delta0, 'Delta1:', delta1)
+              '\nDelta0:', delta0, 'Delta1:', delta1)
 
 else: #LASSO ALGO
     # Not fair err\deo values:
