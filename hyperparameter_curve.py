@@ -57,7 +57,7 @@ else:
                                                                         verbose)
 
 not_fair_stats = {'error': [], 'deo': [], 'EO_prod': [], 'deo_approx': []}
-fair_stats = {'error': [], 'deo': [], 'EO_prod': [], 'deo_approx': []}
+fair_stats = {'error': [], 'deo': [], 'EO_prod': [], 'deo_approx': [], 'delta0': [], 'delta1': []}
 
 if not lasso_algorithm:
     # Not fair err\deo values:
@@ -119,6 +119,8 @@ if not lasso_algorithm:
         delta0 = np.abs(deo[val0] - 0.5 - adeo0)
         delta1 = np.abs(deo[val1] - 0.5 - adeo1)
         fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
+        fair_stats['delta0'].append(delta0)
+        fair_stats['delta1'].append(delta1)
         #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
         print('Coeff Fair-SVM near zero (C=', C, ') :', len([coef for coef in estimator.coef_[0] if coef < 1e-8]),
               '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]), 'AppDEO:', np.abs(adeo0 - adeo1),
@@ -168,6 +170,14 @@ print('Not-fair smallest deo:', np.min(not_fair_stats['deo']))
 print('Fair STATS:', fair_stats)
 print('Fair smallest error:', np.min(fair_stats['error']))
 print('Fair smallest deo:', np.min(fair_stats['deo']))
+
+besterr = np.array(fair_stats['error']).argsort()[:5]
+print('Best with err:', np.array(fair_stats['error'])[besterr])
+print('Best with deo:', np.array(fair_stats['deo'])[besterr])
+bestdelta0 = np.array(fair_stats['delta0'])[besterr]
+bestdelta1 = np.array(fair_stats['delta1'])[besterr]
+print('Delta0 (over the best 5 errors):', np.mean(bestdelta0), '+-', np.std(bestdelta0))
+print('Delta1 (over the best 5 errors):', np.mean(bestdelta1), '+-', np.std(bestdelta1))
 
 SMALL_SIZE = 25
 MEDIUM_SIZE = 25
