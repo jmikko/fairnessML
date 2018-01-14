@@ -22,20 +22,23 @@ class LassoC(Lasso):
     def predict(self, X):
         return np.sign(np.sign(super().predict(X)) + 0.1)
 
+    def decision_function(self, X):
+        return super().predict(X)
+
 np.random.seed(15)
 param_grid_linear = {'C': np.logspace(-6, 6, 40)}
 #param_grid_linear['C'] = param_grid_linear['C'][10:-12]
 
 
 toytest = True
-lasso_algorithm = False
+lasso_algorithm = True
 evaluate_approx_on_train = False
 
 if toytest:
     # Dataset
     n_samples = 100 * 10
     n_samples_low = 20 * 10
-    lasso_dataset = False
+    lasso_dataset = True
     number_of_random_features = 2000
     varA = 0.8
     aveApos = [-1.0, -1.0]
@@ -49,7 +52,8 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 14
+    # 12, 8, 2, 13, 14
+    experiment_number = 12
     iteration = 0
     verbose = 3
     smaller_option = True
@@ -167,11 +171,37 @@ else: #LASSO ALGO
         deo = fair_tpr_from_precomputed(dataset_test.target, prediction, subgropus_idxs)
         val0 = np.min(list(deo.keys()))
         val1 = np.max(list(deo.keys()))
-        print('Coeff Fair-Lasso near zero (alpha=', alpha, ') :', len([coef for coef in estimator.coef_ if coef < 1e-8]),
-              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]))
+
         fair_stats['error'].append(error)
         fair_stats['deo'].append(np.abs(deo[val0] - deo[val1]))
         #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+        if evaluate_approx_on_train:
+            adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_train.data)
+                             if dataset_train.target[idx] == 1 and dataset_train.data[idx][sensible_feature_id] == val0])
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_train.data)
+                             if dataset_train.target[idx] == 1 and dataset_train.data[idx][sensible_feature_id] == val1])
+        else:
+            adeo0 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_test.data)
+                             if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
+            adeo1 = np.mean([estimator.decision_function([ex]) for idx, ex in enumerate(new_dataset_test.data)
+                             if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
+
+        adeo0lim = np.mean([np.max([-1, np.min([1, estimator.decision_function([ex])])])
+                            for idx, ex in enumerate(new_dataset_test.data)
+                            if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val0])
+        adeo1lim = np.mean([np.max([-1, np.min([1, estimator.decision_function([ex])])])
+                            for idx, ex in enumerate(new_dataset_test.data)
+                            if dataset_test.target[idx] == 1 and dataset_test.data[idx][sensible_feature_id] == val1])
+
+        delta0 = np.abs(deo[val0] - 0.5 - adeo0lim)
+        delta1 = np.abs(deo[val1] - 0.5 - adeo1lim)
+        fair_stats['deo_approx'].append(np.abs(adeo0 - adeo1))
+        fair_stats['delta0'].append(delta0)
+        fair_stats['delta1'].append(delta1)
+        #  fair_stats['EO_prod'].append(deo[val0] * deo[val1])
+        print('Coeff Fair-Lasso near zero (alpha=', alpha, ') :', len([coef for coef in estimator.coef_ if coef < 1e-8]),
+              '- error:', error, '- EO:', deo, ' DEO:', np.abs(deo[val0] - deo[val1]),
+              '\nDelta0:', delta0, 'Delta1:', delta1)
 
 print('Not-fair STATS:', not_fair_stats)
 print('Not-fair smallest error:', np.min(not_fair_stats['error']))
@@ -180,11 +210,15 @@ print('Fair STATS:', fair_stats)
 print('Fair smallest error:', np.min(fair_stats['error']))
 print('Fair smallest deo:', np.min(fair_stats['deo']))
 
-besterr = np.array(fair_stats['error']).argsort()[:5]
-print('Best with err:', np.array(fair_stats['error'])[besterr])
-print('Best with deo:', np.array(fair_stats['deo'])[besterr])
-bestdelta0 = np.array(fair_stats['delta0'])[besterr]
-bestdelta1 = np.array(fair_stats['delta1'])[besterr]
+# besterr = np.array(fair_stats['error']).argsort()[0]
+besterr = np.min(fair_stats['error'])
+nearminidx = np.array([idx for idx, v in enumerate(fair_stats['error']) if v <= besterr * 1.05])
+# bestallidx = nearminidx[np.argmin(fair_stats['deo'][nearminidx])]
+bestallidx = nearminidx[np.array(fair_stats['deo'])[nearminidx].argsort()[:5]]
+print('Best with err:', np.array(fair_stats['error'])[bestallidx])
+print('Best with deo:', np.array(fair_stats['deo'])[bestallidx])
+bestdelta0 = np.array(fair_stats['delta0'])[bestallidx]
+bestdelta1 = np.array(fair_stats['delta1'])[bestallidx]
 print('Delta0 (over the best 5 errors):', np.mean(bestdelta0), '+-', np.std(bestdelta0))
 print('Delta1 (over the best 5 errors):', np.mean(bestdelta1), '+-', np.std(bestdelta1))
 
