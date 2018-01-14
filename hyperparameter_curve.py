@@ -26,7 +26,7 @@ np.random.seed(15)
 param_grid_linear = {'C': np.logspace(-6, 6, 40)}
 #param_grid_linear['C'] = param_grid_linear['C'][10:-12]
 
-toytest = False
+toytest = True
 lasso_algorithm = False
 evaluate_approx_on_train = False
 
@@ -48,7 +48,7 @@ if toytest:
     dataset_train = namedtuple('_', 'data, target')(X, y)
     dataset_test = namedtuple('_', 'data, target')(X_test, y_test)
 else:
-    experiment_number = 8
+    experiment_number = 14
     iteration = 0
     verbose = 3
     smaller_option = True

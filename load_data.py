@@ -419,8 +419,8 @@ def load_drug():
 # 10
 # 11
 # 12 Arrhythmia (gender) dataset for task: Normal Vs All-the-others
-# 13
-# 14
+# 13 German (foreign or not) dataset
+# 14 Drug (black vs others) dataset
 # 15 Arrhythmia (gender) dataset for task: Normal Vs All-the-others [-50% of training set]
 # 16 Arrhythmia (gender) dataset for task: Normal Vs All-the-others [-75% of training set]
 # 17 Arrhythmia (gender) dataset for task: Normal Vs All-the-others [-12.5 of training set]
