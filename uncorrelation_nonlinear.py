@@ -136,6 +136,9 @@ class Fair_SVM(BaseEstimator):
                 y_predict[i] = s
             return y_predict + self.b
 
+    def decision_function(self, X):
+        return self.project(X)
+
     def predict(self, X):
         return np.sign(self.project(X))
 
