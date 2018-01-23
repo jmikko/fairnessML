@@ -9,6 +9,7 @@ from hardt import gamma_y_hat, HardtMethod
 from scipy.spatial import ConvexHull
 from uncorrelation import UncorrelationMethod
 from uncorrelation_nonlinear import Fair_SVM, polynomial_kernel, gaussian_kernel, linear_kernel
+from uncorrelation_nonlinear_epsilon import Fair_SVM_eps
 import os, sys
 import numpy as np
 from collections import namedtuple
@@ -74,8 +75,13 @@ if __name__ == '__main__':
     number_of_iterations = 10
 
     linear = False
-    zafar = True
+    zafar = False
     not_linear = False
+    our_epsilon = True
+
+    if our_epsilon:
+        epsilon = 0.5
+        print('Epsilon for our method:', epsilon)
 
 
     grid_search_complete = True
@@ -112,12 +118,12 @@ if __name__ == '__main__':
 
     # ********************************************************************************************
 
-    accuracy_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
-    accuracy_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
-    eq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
-    eq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
-    peq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
-    peq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': []}
+    accuracy_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': [], 'ourKeps': []}
+    accuracy_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': [], 'ourKeps': []}
+    eq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': [], 'ourKeps': []}
+    eq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': [], 'ourKeps': []}
+    peq_opp_train = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': [], 'ourKeps': []}
+    peq_opp_test = {'hardt': [], 'hardtK': [], 'our': [], 'zafar': [], 'svm': [], 'svmV': [], 'svmK': [], 'svmVK': [], 'ourK': [], 'ourKeps': []}
 
     print('Experimental settings')
     print('Parameter Grid Search for Linear')
@@ -489,7 +495,7 @@ if __name__ == '__main__':
 
             svc = Fair_SVM(sensible_feature=sensible_feature)
             score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,  verbose=verbose, n_jobs=n_jobs,
-                                                                 sensible_feature=sensible_feature, params=param_grid_linear)
+                                                                 sensible_feature=sensible_feature, params=param_grid_all)
 
 
             if verbose >= 3:
@@ -514,6 +520,44 @@ if __name__ == '__main__':
             eq_opp_test['ourK'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
             peq_opp_train['ourK'].append(np.abs(list(eqopptrain[0].values())[0] * list(eqopptrain[0].values())[1]))
             peq_opp_test['ourK'].append(np.abs(list(eqopptest[0].values())[0] * list(eqopptest[0].values())[1]))
+
+        if our_epsilon:
+            # Our uncorrelation method - Kernel with epsilon
+            print('\nOur uncorrelation method with epsilon with kernels...')
+            list_of_sensible_feature_test = dataset_test.data[:, sensible_feature]
+            list_of_sensible_feature_train = dataset_train.data[:, sensible_feature]
+
+            svc = Fair_SVM_eps(sensible_feature=sensible_feature, epsilon=epsilon)
+            score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc, verbose=verbose,
+                                                                 n_jobs=n_jobs,
+                                                                 sensible_feature=sensible_feature,
+                                                                 params=param_grid_all)
+
+            if verbose >= 3:
+                print('Our Y:', best_estimator)
+
+            # Accuracy
+            facctest = best_estimator.score(dataset_test.data, dataset_test.target)
+            facctrain = best_estimator.score(dataset_train.data, dataset_train.target)
+            if verbose >= 2:
+                print('Our Accuracy train:', facctest)
+                print('Our Accuracy test:', facctrain)
+            # Fairness measure
+            eqopptrain = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_train, best_estimator,
+                                                                         [list_of_sensible_feature_train], ylabel=1)
+            eqopptest = equalized_odds_measure_TP_from_list_of_sensfeat(dataset_test, best_estimator,
+                                                                        [list_of_sensible_feature_test], ylabel=1)
+            if verbose >= 2:
+                print('Eq. opp. train fair: \n', eqopptrain)
+                print('Eq. opp. test fair: \n', eqopptest)
+
+            accuracy_train['ourKeps'].append(facctrain)
+            accuracy_test['ourKeps'].append(facctest)
+            eq_opp_train['ourKeps'].append(np.abs(list(eqopptrain[0].values())[0] - list(eqopptrain[0].values())[1]))
+            eq_opp_test['ourKeps'].append(np.abs(list(eqopptest[0].values())[0] - list(eqopptest[0].values())[1]))
+            peq_opp_train['ourKeps'].append(np.abs(list(eqopptrain[0].values())[0] * list(eqopptrain[0].values())[1]))
+            peq_opp_test['ourKeps'].append(np.abs(list(eqopptest[0].values())[0] * list(eqopptest[0].values())[1]))
+
 
         if zafar:
             # Zafar
@@ -581,10 +625,10 @@ if __name__ == '__main__':
             peq_opp_train['zafar'].append(np.abs(s_attr_to_fp_fn_train_cons["s1"][0.0]["fpr"] * s_attr_to_fp_fn_train_cons["s1"][1.0]["fpr"]))
             peq_opp_test['zafar'].append(np.abs(s_attr_to_fp_fn_test_cons["s1"][0.0]["fpr"] * s_attr_to_fp_fn_test_cons["s1"][1.0]["fpr"]))
 
-        if verbose >= 2:
-            print('Zafar list of values:')
-            print('For Test:', s_attr_to_fp_fn_test_cons)
-            print('For Train:', s_attr_to_fp_fn_train_cons)
+            if verbose >= 2:
+                print('Zafar list of values:')
+                print('For Test:', s_attr_to_fp_fn_test_cons)
+                print('For Train:', s_attr_to_fp_fn_train_cons)
 
         if verbose >= 1 and iteration != number_of_iterations - 1:
             print('\n\nStats at iteration', iteration + 1)
@@ -655,6 +699,14 @@ if __name__ == '__main__':
                          np.mean(eq_opp_test['ourK']), np.std(eq_opp_test['ourK']),
                          np.mean(peq_opp_train['ourK']), np.std(peq_opp_train['ourK']),
                          np.mean(peq_opp_test['ourK']), np.std(peq_opp_test['ourK'])))
+            if our_epsilon:
+                print('OurKeps \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+                      % (np.mean(accuracy_train['ourKeps']), np.std(accuracy_train['ourKeps']),
+                         np.mean(accuracy_test['ourKeps']), np.std(accuracy_test['ourKeps']),
+                         np.mean(eq_opp_train['ourKeps']), np.std(eq_opp_train['ourKeps']),
+                         np.mean(eq_opp_test['ourKeps']), np.std(eq_opp_test['ourKeps']),
+                         np.mean(peq_opp_train['ourKeps']), np.std(peq_opp_train['ourKeps']),
+                         np.mean(peq_opp_test['ourKeps']), np.std(peq_opp_test['ourKeps'])))
 
     print('\n\n\n\nFinal stats (after', iteration+1, 'iterations)')
     print('Method \t Accuracy on train \t Accuracy on test \t Diff.Eq.Opp.train \t Diff.Eq.Opp.test \t Prod.Eq.Opp.train \t Prod.Eq.Opp.test')
@@ -724,4 +776,12 @@ if __name__ == '__main__':
                  np.mean(eq_opp_test['ourK']), np.std(eq_opp_test['ourK']),
                  np.mean(peq_opp_train['ourK']), np.std(peq_opp_train['ourK']),
                  np.mean(peq_opp_test['ourK']), np.std(peq_opp_test['ourK'])))
+    if our_epsilon:
+        print('OurKeps \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f \t %.3f +- %.3f'
+              % (np.mean(accuracy_train['ourKeps']), np.std(accuracy_train['ourKeps']),
+                 np.mean(accuracy_test['ourKeps']), np.std(accuracy_test['ourKeps']),
+                 np.mean(eq_opp_train['ourKeps']), np.std(eq_opp_train['ourKeps']),
+                 np.mean(eq_opp_test['ourKeps']), np.std(eq_opp_test['ourKeps']),
+                 np.mean(peq_opp_train['ourKeps']), np.std(peq_opp_train['ourKeps']),
+                 np.mean(peq_opp_test['ourKeps']), np.std(peq_opp_test['ourKeps'])))
 

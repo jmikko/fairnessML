@@ -187,9 +187,9 @@ for k in not_fair_stats:
 cmap = 'binary'
 
 fig = plt.figure(2, figsize=(9, 8), dpi=80)
-plt.imshow(fair_stats['deo'], interpolation='bilinear', cmap=cmap, label='DEO')
+plt.imshow(fair_stats['deo'], cmap=cmap, label='DEO')
 plt.xlabel('log(C)')
-plt.ylabel('log(Gamma)')
+plt.ylabel('log($\gamma$)')
 #plt.xticks(param_grid['C'])
 #plt.yticks(param_grid['gamma'])
 plt.colorbar()
@@ -211,9 +211,9 @@ else:
 
 
 fig = plt.figure(3, figsize=(9, 8), dpi=80)
-plt.imshow(fair_stats['deo_approx'], interpolation='bilinear', cmap=cmap, label='Approx DEO')
+plt.imshow(fair_stats['deo_approx'], cmap=cmap, label='Approx DEO')
 plt.xlabel('log(C)')
-plt.ylabel('log(Gamma)')
+plt.ylabel('log($\gamma$)')
 plt.colorbar()
 #plt.legend()
 plt.axes().get_xaxis().set_ticks([])
@@ -232,9 +232,9 @@ else:
     plt.savefig(strtitle)
 
 fig = plt.figure(4, figsize=(9, 8), dpi=80)
-plt.imshow(fair_stats['error'], interpolation='bilinear', cmap=cmap, label='Error')
+plt.imshow(fair_stats['error'], cmap=cmap, label='Error')
 plt.xlabel('log(C)')
-plt.ylabel('log(Gamma)')
+plt.ylabel('log($\gamma$)')
 plt.colorbar()
 #plt.legend()
 plt.axes().get_xaxis().set_ticks([])
@@ -253,9 +253,9 @@ else:
     plt.savefig(strtitle)
 
 fig = plt.figure(5, figsize=(9, 8), dpi=80)
-plt.imshow(not_fair_stats['deo'], interpolation='bilinear', cmap=cmap, label='DEO')
+plt.imshow(not_fair_stats['deo'], cmap=cmap, label='DEO')
 plt.xlabel('log(C)')
-plt.ylabel('log(Gamma)')
+plt.ylabel('log($\gamma$)')
 plt.colorbar()
 #plt.legend()
 plt.axes().get_xaxis().set_ticks([])
@@ -274,9 +274,11 @@ else:
     plt.savefig(strtitle)
 
 fig = plt.figure(6, figsize=(9, 8), dpi=80)
-plt.imshow(not_fair_stats['deo_approx'], interpolation='bilinear', cmap=cmap, label='Approx DEO')
+#plt.imshow(not_fair_stats['deo_approx'], interpolation='bilinear', cmap=cmap, label='Approx DEO')
+plt.imshow(not_fair_stats['deo_approx'], cmap=cmap, label='Approx DEO')
+
 plt.xlabel('log(C)')
-plt.ylabel('log(Gamma)')
+plt.ylabel('log($\gamma$)')
 plt.colorbar()
 #plt.legend()
 plt.axes().get_xaxis().set_ticks([])
@@ -295,9 +297,10 @@ else:
     plt.savefig(strtitle)
 
 fig = plt.figure(7, figsize=(9, 8), dpi=80)
-plt.imshow(not_fair_stats['error'], interpolation='bilinear', cmap=cmap, label='Error')
+#plt.imshow(not_fair_stats['error'], interpolation='bilinear', cmap=cmap, label='Error')
+plt.imshow(not_fair_stats['error'], cmap=cmap, label='Error')
 plt.xlabel('log(C)')
-plt.ylabel('log(Gamma)')
+plt.ylabel('log($\gamma$)')
 plt.colorbar()
 #plt.legend()
 plt.axes().get_xaxis().set_ticks([])
