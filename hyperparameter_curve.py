@@ -26,19 +26,19 @@ class LassoC(Lasso):
         return super().predict(X)
 
 np.random.seed(15)
-param_grid_linear = {'C': np.logspace(-6, 6, 40)}
+param_grid_linear = {'C': np.logspace(-6, 6, 20)}
 #param_grid_linear['C'] = param_grid_linear['C'][10:-12]
 
 
 toytest = True
-lasso_algorithm = True
+lasso_algorithm = False
 evaluate_approx_on_train = False
 
 if toytest:
     # Dataset
     n_samples = 100 * 10
     n_samples_low = 20 * 10
-    lasso_dataset = True
+    lasso_dataset = False
     number_of_random_features = 2000
     varA = 0.8
     aveApos = [-1.0, -1.0]
@@ -331,6 +331,9 @@ if not lasso_algorithm:
         plt.title(strtitle)
         plt.savefig(strtitle)
 
-
+print('\nNot fair error\n', not_fair_stats['error'])
+print('\nNot fair DEO\n', not_fair_stats['deo'])
+print('\nFair error\n', fair_stats['error'])
+print('\nFair DEO\n', fair_stats['deo'])
 plt.show()
 

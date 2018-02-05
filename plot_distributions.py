@@ -34,7 +34,7 @@ bins = 15
 # Plot a 1D density example
 toytest = False
 
-experiment_number = 13
+experiment_number = 2
 smaller_option = True
 verbose = 3
 iteration = 0
@@ -73,7 +73,7 @@ if swap_labels:
     dataset_test.target = np.array([ypos if yy == yneg else yneg for yy in dataset_test.target])
 
 grid_search_complete = True
-n_jobs = 2
+n_jobs = 1
 
 if grid_search_complete:
     if experiment_number in [10]:
@@ -120,10 +120,10 @@ score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test
                                                      n_jobs=n_jobs,
                                                      sensible_feature=sensible_feature, params=param_grid_linear)
 distance_from_hyperplane = best_estimator.decision_function(Xte)
-idx_group_A1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == ypos]
-idx_group_B1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == ypos]
-idx_group_A0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == yneg]
-idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == yneg]
+idx_group_A1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and yte[idx] == ypos]
+idx_group_B1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and yte[idx] == ypos]
+idx_group_A0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and yte[idx] == yneg]
+idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and yte[idx] == yneg]
 
 
 print('Values:', distance_from_hyperplane)
@@ -140,7 +140,7 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+#plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
 ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=1.0)
 ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='A, Y=0', alpha=0.5)
@@ -161,7 +161,7 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+#plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
 ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=0.5)
@@ -194,10 +194,10 @@ score, best_estimator = two_step_validation_with_DEO(new_dataset_train, new_data
                                                      list_of_sensible_feature=[x[sensible_feature] for x in
                                                                                dataset_train.data])
 distance_from_hyperplane = best_estimator.decision_function(new_dataset_test.data)
-idx_group_A1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == ypos]
-idx_group_B1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == ypos]
-idx_group_A0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and y[idx] == yneg]
-idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and y[idx] == yneg]
+idx_group_A1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and yte[idx] == ypos]
+idx_group_B1 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and yte[idx] == ypos]
+idx_group_A0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[0] and yte[idx] == yneg]
+idx_group_B0 = [idx for idx, v in enumerate(Xte) if v[sensible_feature] == sensible_feature_values[1] and yte[idx] == yneg]
 
 
 print('Fair Values:', distance_from_hyperplane)
@@ -213,7 +213,7 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+#plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 ax[0].hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
 ax[1].hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=1.0)
 ax[0].hist(distance_from_hyperplane[idx_group_A0], bins=bins, normed=True, stacked=True, label='A, Y=0', alpha=0.5)
@@ -234,7 +234,7 @@ plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
-plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
+#plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 pdf, bins, patches = ax.hist(distance_from_hyperplane[idx_group_A1], bins=bins, normed=True, stacked=True, label='A, Y=1', alpha=1.0)
 # print(np.sum(pdf * np.diff(bins))) # it has to be 1!
 ax.hist(distance_from_hyperplane[idx_group_B1], bins=bins, normed=True, stacked=True, label='B, Y=1', alpha=0.5)
