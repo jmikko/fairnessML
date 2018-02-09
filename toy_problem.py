@@ -19,6 +19,8 @@ def plot_hyperplane(clf, min_x, max_x, linestyle, label):
     plt.plot(xx, yy, linestyle, label=label)
 
 # Number of samples per component
+# n_samples = int(100 * 25.0 / 8.0) + 2
+# n_samples_low = int(20 * 25.0 / 8.0)
 n_samples = 100
 n_samples_low = 20
 
@@ -50,6 +52,10 @@ sensible_feature_id = len(X[1, :]) - 1
 
 y = [1] * n_samples + [0] * n_samples + [1] * n_samples_low + [0] * n_samples
 y = np.array(y)
+
+
+np.savetxt('X_toy', X, fmt='%.18e', delimiter=' ', newline='\n', header='', footer='', comments='# ')
+np.savetxt('Y_toy', y, fmt='%.18e', delimiter=' ', newline='\n', header='', footer='', comments='# ')
 
 plt.scatter(X[:n_samples * 2, 0], X[:n_samples * 2, 1], marker='o', s=25, c=y[:n_samples * 2], edgecolors='k', label='Group A')
 plt.scatter(X[n_samples * 2:, 0], X[n_samples * 2:, 1], marker='s', s=25, c=y[n_samples * 2:], edgecolors='k', label='Group B')
