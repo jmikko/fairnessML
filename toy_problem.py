@@ -7,8 +7,8 @@ from uncorrelation import UncorrelationMethod
 from collections import namedtuple
 
 
-point_size = 100
-linewidth = 5
+point_size = 150
+linewidth = 6
 
 def plot_hyperplane(clf, min_x, max_x, linestyle, label):
     # get the separating hyperplane
@@ -24,13 +24,13 @@ def plot_hyperplane(clf, min_x, max_x, linestyle, label):
 # Number of samples per component
 # n_samples = int(100 * 25.0 / 8.0) + 2
 # n_samples_low = int(20 * 25.0 / 8.0)
-n_samples = 100
-n_samples_low = 20
+n_samples = 100 * 20
+n_samples_low = 20 * 20
 
 # Generate random sample, two components
 np.random.seed(0)
 
-varA = 0.5
+varA = 0.8
 aveApos = [-1.0, -1.0]
 aveAneg = [1.0, 1.0]
 
@@ -60,12 +60,16 @@ y = np.array(y)
 np.savetxt('X_toy', X, fmt='%.18e', delimiter=' ', newline='\n', header='', footer='', comments='# ')
 np.savetxt('Y_toy', y, fmt='%.18e', delimiter=' ', newline='\n', header='', footer='', comments='# ')
 
-plt.scatter(X[:n_samples * 2, 0], X[:n_samples * 2, 1], marker='o', s=point_size, c=y[:n_samples * 2], edgecolors='k', label='Group A')
-plt.scatter(X[n_samples * 2:, 0], X[n_samples * 2:, 1], marker='s', s=point_size, c=y[n_samples * 2:], edgecolors='k', label='Group B')
+step = 30
+alpha = 0.5
+plt.scatter(X[0:n_samples * 2:step, 0], X[0:n_samples * 2:step, 1], marker='o', s=point_size, c=y[0:n_samples * 2:step],
+            edgecolors='k', linewidth='0', label='Group A', alpha=alpha)
+plt.scatter(X[n_samples * 2::step, 0], X[n_samples * 2::step, 1], marker='s', s=point_size, c=y[n_samples * 2::step],
+            edgecolors='k', linewidth='0', label='Group B', alpha=alpha)
 
 
 #svc = svm.SVC(C=10.0, kernel='linear', class_weight="balanced")
-svc = svm.LinearSVC(C=10.0, fit_intercept=True)#, class_weight="balanced")
+svc = svm.LinearSVC(C=100.0, fit_intercept=True)#, class_weight="balanced")
 svc.fit(X, y)
 min_x = np.min(X[:, 0])
 max_x = np.max(X[:, 0])
@@ -81,7 +85,7 @@ tpr_pred = fair_tpr_from_precomputed(y, prediction, subgropus_idxs)
 print('with EO:', tpr_pred)
 
 svc.fit(X[idx_A, :], y[idx_A])
-plot_hyperplane(svc, min_x, max_x, 'g--', 'Group A Boundary')
+plot_hyperplane(svc, min_x, max_x, 'c--', 'Group A Boundary')
 prediction = svc.predict(X)
 print('Train Accuracy group A for all the examples:', accuracy_score(y, prediction))
 subgropus_idxs = subgrups_sensible_feature_data(X, sensible_feature_id)
@@ -94,7 +98,7 @@ prediction = svc.predict(X[idx_B, :])
 print('Train Accuracy group A on group B:', accuracy_score(y[idx_B], prediction))
 
 svc.fit(X[idx_B, :], y[idx_B])
-plot_hyperplane(svc, min_x, max_x, 'b--', 'Group B Boundary')
+plot_hyperplane(svc, min_x, max_x, 'm--', 'Group B Boundary')
 prediction = svc.predict(X)
 print('Train Accuracy group B for all the examples:', accuracy_score(y, prediction))
 subgropus_idxs = subgrups_sensible_feature_data(X, sensible_feature_id)
