@@ -16,7 +16,7 @@ from sklearn.model_selection import KFold
 
 
 def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params, sensible_feature, scorer=accuracy_score,
-                                 n_jobs=1, verbose=0, random_state=0, list_of_sensible_feature=None):
+                                 n_jobs=1, verbose=0, random_state=0, list_of_sensible_feature=None, no_sensitive=False):
 
     np.random.seed(random_state)
     random_state_inner = random_state
@@ -25,7 +25,11 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
     clf = GridSearchCV(estimator=estimator, cv=cv, param_grid=params, n_jobs=n_jobs,
                        scoring=make_scorer(scorer))
 
-    clf.fit(dataset_train.data, dataset_train.target)
+    if no_sensitive:
+        dataset_train_no_sensitive = np.delete(dataset_train.data, sensible_feature, 1)
+        clf.fit(dataset_train_no_sensitive, dataset_train.target)
+    else:
+        clf.fit(dataset_train.data, dataset_train.target)
 
     if verbose >= 2:
         print('Best score:', clf.best_score_)
@@ -78,10 +82,18 @@ def two_step_validation_with_DEO(dataset_train, dataset_test, estimator, params,
     min_value = np.min(inner_validation_list)
     final_best_params = inner_validation_dict[min_value_idx]
     estimator.set_params(**final_best_params)
-    estimator.fit(dataset_train.data, dataset_train.target)
-    # Prediction performance on test set is not as good as on train set
-    pred = estimator.predict(dataset_test.data)
-    score = scorer(dataset_test.target, pred)
+    if no_sensitive:
+        estimator.fit(dataset_train_no_sensitive, dataset_train.target)
+    else:
+        estimator.fit(dataset_train.data, dataset_train.target)
+
+    if no_sensitive:
+        dataset_test_no_sensitive = np.delete(dataset_test.data, sensible_feature, 1)
+        pred = estimator.predict(dataset_test_no_sensitive)
+        score = scorer(dataset_test.target, pred)
+    else:
+        pred = estimator.predict(dataset_test.data)
+        score = scorer(dataset_test.target, pred)
 
     if verbose >= 1:
         print('Selected params:', final_best_params)

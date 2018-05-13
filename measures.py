@@ -75,6 +75,26 @@ def equalized_odds_measure_TP(data, model, sensible_features, ylabel, rev_pred=1
     return eq_dict
 
 
+def equalized_odds_measure_TP_no_sensitive(data, model, sensible_features, ylabel, rev_pred=1):
+    newdata = np.delete(data.data, sensible_features, 1)
+    predictions = model.predict(newdata) * rev_pred
+    truth = data.target
+    eq_dict = {}
+    for feature in sensible_features:
+        eq_sensible_feature = {}
+        values_of_sensible_feature = list(set(data.data[:, feature]))
+        for val in values_of_sensible_feature:
+            eq_tmp = None
+            positive_sensitive = np.sum([1.0 if data.data[i, feature] == val and truth[i] == ylabel else 0.0
+                                         for i in range(len(predictions))])
+            if positive_sensitive > 0:
+                eq_tmp = np.sum([1.0 if predictions[i] == ylabel and data.data[i, feature] == val and truth[i] == ylabel
+                                 else 0.0 for i in range(len(predictions))]) / positive_sensitive
+            eq_sensible_feature[val] = eq_tmp
+        eq_dict[feature] = eq_sensible_feature
+    return eq_dict
+
+
 def equalized_odds_measure_TP_from_list_of_sensfeat(data, model, sensible_features, ylabel, rev_pred=1):
     predictions = model.predict(data.data) * rev_pred
     truth = data.target

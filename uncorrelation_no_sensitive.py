@@ -11,7 +11,7 @@ from scipy.spatial import ConvexHull
 from collections import namedtuple
 
 
-class UncorrelationMethod:
+class UncorrelationMethod_no_sensitive:
     def __init__(self, dataset, model, sensible_feature):
         self.dataset = dataset
         self.values_of_sensible_feature = list(set(dataset.data[:, sensible_feature]))
@@ -33,16 +33,19 @@ class UncorrelationMethod:
                    if self.dataset.target[idx] == 1 and ex[self.sensible_feature] == self.val0]
             average_not_A_1 = np.mean(tmp, 0)
             self.u = -(average_A_1 - average_not_A_1)
-        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in examples])
+        # new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in examples])
+        new_examples = np.array([ex + self.u * ex[0] for ex in examples])
         new_examples = np.delete(new_examples, self.sensible_feature, 1)
+        new_examples = np.delete(new_examples, 0, 1)
         return new_examples
 
     def predict(self, examples):
         if self.u is None:
             print('Model not trained yet!')
             return 0
-        new_examples = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in examples])
+        new_examples = np.array([ex + self.u * ex[0] for ex in examples])
         new_examples = np.delete(new_examples, self.sensible_feature, 1)
+        new_examples = np.delete(new_examples, 0, 1)
         prediction = self.model.predict(new_examples)
         return prediction
 
@@ -64,13 +67,17 @@ class UncorrelationMethod:
         #  print(u)
         #  print(u[sensible_feature])
 
-        newdata = np.array([ex if ex[self.sensible_feature] == self.val0 else ex + self.u for ex in self.dataset.data])
+        newdata = np.array([ex + self.u * ex[0] for ex in self.dataset.data])
         #  newdata = map(lambda x: x + u, dataset_train.data)
         newdata = np.delete(newdata, self.sensible_feature, 1)
+        newdata = np.delete(newdata, 0, 1)
+
         #  print(newdata.shape)
         self.dataset = namedtuple('_', 'data, target')(newdata, self.dataset.target)
 
         self.model.fit(self.dataset.data, self.dataset.target)
+        #if hasattr(self.model, 'best_estimator_'):
+        #    self.model = self.model.best_estimator_
         #self.coef_ = self.model.coef_
         #self.intercept_ = self.model.intercept_
 
@@ -146,7 +153,7 @@ if __name__ == "__main__":
         param_grid = [{'C': [10.0], 'kernel': ['linear'], 'gamma': ['auto']}]
     svc = svm.SVC()
     clf = GridSearchCV(svc, param_grid, n_jobs=1)
-    algorithm = UncorrelationMethod(dataset_train, clf, sensible_feature)
+    algorithm = UncorrelationMethod_no_sensitive(dataset_train, clf, sensible_feature)
     algorithm.fit()
     print('Y fair:', algorithm.model.best_estimator_)
 

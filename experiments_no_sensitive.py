@@ -1,13 +1,14 @@
 from load_data import load_experiments
 from sklearn import svm
 import numpy as np
-from measures import equalized_odds_measure_TP, equalized_odds_measure_FP, equalized_odds_measure_from_pred_TP, equalized_odds_measure_TP_from_list_of_sensfeat
+from measures import equalized_odds_measure_FP, equalized_odds_measure_from_pred_TP, equalized_odds_measure_TP_from_list_of_sensfeat
 import matplotlib.pyplot as plt
+from measures import equalized_odds_measure_TP_no_sensitive as equalized_odds_measure_TP
 from sklearn.model_selection import GridSearchCV
 from scipy.optimize import linprog
 from hardt import gamma_y_hat, HardtMethod
 from scipy.spatial import ConvexHull
-from uncorrelation import UncorrelationMethod
+from uncorrelation_no_sensitive import UncorrelationMethod_no_sensitive as UncorrelationMethod
 from uncorrelation_nonlinear import Fair_SVM, polynomial_kernel, gaussian_kernel, linear_kernel
 from uncorrelation_nonlinear_epsilon import Fair_SVM_eps
 import os, sys
@@ -140,6 +141,9 @@ if __name__ == '__main__':
         dataset_train, dataset_test, sensible_feature = load_experiments(experiment_number, smaller_option, verbose)
         ntrain = len(dataset_train.target)
 
+        dataset_test_no_sensitive = np.delete(dataset_test.data, sensible_feature, 1)
+        dataset_train_no_sensitive = np.delete(dataset_train.data, sensible_feature, 1)
+
         if linear:
             # Train an SVM using the training set
             print('\nGrid search for the standard Linear SVM with standard validation...')
@@ -147,17 +151,17 @@ if __name__ == '__main__':
             cv = KFold(n_splits=5, shuffle=False, random_state=seed)
             clf = GridSearchCV(estimator=svc, cv=cv, param_grid=param_grid_linear, n_jobs=n_jobs,
                                scoring=make_scorer(accuracy_score))
-            clf.fit(dataset_train.data, dataset_train.target)
+            clf.fit(dataset_train_no_sensitive, dataset_train.target)
             best_estimator = clf.best_estimator_
 
             if verbose >= 3:
                 print('Y_hat:', best_estimator)
-                print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
+                #print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
                 print('All the weights:', best_estimator.coef_[0, :])
 
             # Accuracy & fairness stats
-            pred = best_estimator.predict(dataset_test.data)
-            pred_train = best_estimator.predict(dataset_train.data)
+            pred = best_estimator.predict(dataset_test_no_sensitive)
+            pred_train = best_estimator.predict(dataset_train_no_sensitive)
 
             acctest = accuracy_score(dataset_test.target, pred)
             acctrain = accuracy_score(dataset_train.target, pred_train)
@@ -181,16 +185,17 @@ if __name__ == '__main__':
             print('\nGrid search for the standard Linear SVM...')
             svc = svm.SVC()
             score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc, verbose=verbose, n_jobs=n_jobs,
-                                                                 sensible_feature=sensible_feature, params=param_grid_linear)
+                                                                 sensible_feature=sensible_feature, params=param_grid_linear,
+                                                                 no_sensitive=True)
 
             if verbose >= 3:
                 print('Y_hat:', best_estimator)
-                print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
+                #print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
                 print('All the weights:', best_estimator.coef_[0, :])
 
             # Accuracy & fairness stats
-            pred = best_estimator.predict(dataset_test.data)
-            pred_train = best_estimator.predict(dataset_train.data)
+            pred = best_estimator.predict(dataset_test_no_sensitive)
+            pred_train = best_estimator.predict(dataset_train_no_sensitive)
 
             acctest = accuracy_score(dataset_test.target, pred)
             acctrain = accuracy_score(dataset_train.target, pred_train)
@@ -211,108 +216,14 @@ if __name__ == '__main__':
             peq_opp_test['svm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
             # Hardt method
-            print('\nHardt method on linear SVM...')
-            algorithm = HardtMethod(dataset_train, best_estimator, sensible_feature)
-            res = algorithm.fit()
+            print('\nHardt method impossible...')
+            accuracy_train['hardt'].append(-1)
+            accuracy_test['hardt'].append(-1)
+            eq_opp_train['hardt'].append(-1)
+            eq_opp_test['hardt'].append(-1)
+            peq_opp_train['hardt'].append(-1)
+            peq_opp_test['hardt'].append(-1)
 
-            if verbose >= 2:
-                if res.status == 0:
-                    print('Thetas [prob. of NOT changing the prediction] y1A1, y0A1, y1A0, y0A0:', res.x[:4])
-                    print('Alphas:', res.x[4:])
-                else:
-                    print('res.x:', res.x)
-            if res.status != 0:
-                print('res.status != 0:')
-            else:
-                theta_11, theta_01, theta_10, theta_00, alpha1, alpha2, alpha3, alpha4 = res.x
-                values_of_sensible_feature = list(set(dataset_train.data[:, sensible_feature]))
-                val0 = np.min(values_of_sensible_feature)
-                val1 = np.max(values_of_sensible_feature)
-
-                tmp = [1.0 if pred_train[idx] == 1 and dataset_train.data[idx, sensible_feature] == val1 else 0.0 for idx in
-                       range(ntrain)]
-                phi_hat_11 = np.sum(tmp) / len(tmp)
-                tmp = [1.0 if pred_train[idx] == -1 and dataset_train.data[idx, sensible_feature] == val1 else 0.0 for idx in
-                       range(ntrain)]
-                phi_hat_01 = np.sum(tmp) / len(tmp)
-
-                tmp = [1.0 if pred_train[idx] == 1 and dataset_train.data[idx, sensible_feature] == val0 else 0.0 for idx in
-                       range(ntrain)]
-                phi_hat_10 = np.sum(tmp) / len(tmp)
-
-                tmp = [1.0 if pred_train[idx] == -1 and dataset_train.data[idx, sensible_feature] == val0 else 0.0 for idx in
-                       range(ntrain)]
-                phi_hat_00 = np.sum(tmp) / len(tmp)
-
-                fair_pred_train = [float(algorithm.y_tilde(algorithm.model.predict(ex.reshape(1, -1)),
-                                                           1 if ex[sensible_feature] == val1 else 0))
-                                   for ex in dataset_train.data]
-                fair_pred = [float(algorithm.y_tilde(algorithm.model.predict(ex.reshape(1, -1)),
-                                                     1 if ex[sensible_feature] == val1 else 0))
-                             for ex in dataset_test.data]
-                # Accuracy
-                facctrain = accuracy_score(dataset_train.target, fair_pred_train)
-                facctest = accuracy_score(dataset_test.target, fair_pred)
-                if verbose >= 2:
-                    print('Hardt Accuracy train:', facctest)
-                    print('Hardt Accuracy test:', facctrain)
-                acc_Y_hat_test = accuracy_score(dataset_test.target, pred)
-                acc_Y_hat_train = accuracy_score(dataset_train.target, pred_train)
-                y_tilde_equals_y_hat = theta_11 * phi_hat_11 + \
-                                       theta_01 * phi_hat_01 + \
-                                       theta_10 * phi_hat_10 + \
-                                       theta_00 * phi_hat_00
-
-                facctestT = (2 * acc_Y_hat_test - 1) * y_tilde_equals_y_hat + 1 - acc_Y_hat_test
-                facctrainT = (2 * acc_Y_hat_train - 1) * y_tilde_equals_y_hat + 1 - acc_Y_hat_train
-                eqopptest = equalized_odds_measure_from_pred_TP(dataset_test, fair_pred, [sensible_feature], ylabel=1)
-                eqopptrain = equalized_odds_measure_from_pred_TP(dataset_train, fair_pred_train, [sensible_feature], ylabel=1)
-                if verbose >= 2:
-                    print('Fair Accuracy Theoretical train:', facctrainT)
-                    print('Fair Accuracy Theoretical test:', facctestT)
-                    # Fairness measure
-                    print('Eq. opp. train: \n', eqopptrain)  # Feature 1 is SEX
-                    print('Eq. opp. test: \n', eqopptest)  # Feature 1 is SEX
-
-            accuracy_train['hardt'].append(facctrain)
-            accuracy_test['hardt'].append(facctest)
-            eq_opp_train['hardt'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
-            eq_opp_test['hardt'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
-            peq_opp_train['hardt'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
-            peq_opp_test['hardt'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
-
-            # Weighted SVM
-            # print('\nGrid search for the Weighted Linear SVM...')
-            # svc = svm.SVC()
-            # score, best_estimator = two_step_validation_with_DEO(dataset_train, dataset_test, svc,
-            #                                                      sensible_feature=sensible_feature, params=param_grid_linear)
-            #
-            # if verbose >= 3:
-            #     print('Y_hat:', best_estimator)
-            #     print('Relative weight for the sensible feature:', best_estimator.coef_[0, sensible_feature])
-            #     print('All the weights:', best_estimator.coef_[0, :])
-            #
-            # # Accuracy & fairness stats
-            # pred = best_estimator.predict(dataset_test.data)
-            # pred_train = best_estimator.predict(dataset_train.data)
-            #
-            # acctest = accuracy_score(dataset_test.target, pred)
-            # acctrain = accuracy_score(dataset_train.target, pred_train)
-            # eqopptest = equalized_odds_measure_TP(dataset_test, best_estimator, [sensible_feature], ylabel=1)
-            # eqopptrain = equalized_odds_measure_TP(dataset_train, best_estimator, [sensible_feature], ylabel=1)
-            # if verbose >= 2:
-            #     print('Accuracy train:', acctrain)
-            #     print('Accuracy test:', acctest)
-            #     # Fairness measure
-            #     print('Eq. opp. train: \n', eqopptrain)
-            #     print('Eq. opp. test: \n', eqopptest)
-            #
-            # accuracy_train['wsvm'].append(acctrain)
-            # accuracy_test['wsvm'].append(acctest)
-            # eq_opp_train['wsvm'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] - list(eqopptrain[sensible_feature].values())[1]))
-            # eq_opp_test['wsvm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] - list(eqopptest[sensible_feature].values())[1]))
-            # peq_opp_train['wsvm'].append(np.abs(list(eqopptrain[sensible_feature].values())[0] * list(eqopptrain[sensible_feature].values())[1]))
-            # peq_opp_test['wsvm'].append(np.abs(list(eqopptest[sensible_feature].values())[0] * list(eqopptest[sensible_feature].values())[1]))
 
             # Our uncorrelation method - Linear
             print('\nOur uncorrelation method...')
@@ -575,8 +486,8 @@ if __name__ == '__main__':
             val1 = np.max(dataset_train.data[:, sensible_feature])
             new_train_sensitive = np.array([0 if valx == val0 else 1 for valx in dataset_train.data[:, sensible_feature]])
             new_test_sensitive = np.array([0 if valx == val0 else 1 for valx in dataset_test.data[:, sensible_feature]])
-            x_train, y_train, x_control_train, x_test, y_test, x_control_test = np.hstack((dataset_train.data[:, :sensible_feature], dataset_train.data[:, sensible_feature:])), dataset_train.target, {"s1": new_train_sensitive},\
-                                                                                np.hstack((dataset_test.data[:, :sensible_feature], dataset_test.data[:, sensible_feature:])), dataset_test.target, {"s1": new_test_sensitive}
+            x_train, y_train, x_control_train, x_test, y_test, x_control_test = np.hstack((dataset_train.data[:, :sensible_feature], dataset_train.data[:, sensible_feature+1:])), dataset_train.target, {"s1": new_train_sensitive},\
+                                                                                np.hstack((dataset_test.data[:, :sensible_feature], dataset_test.data[:, sensible_feature + 1:])), dataset_test.target, {"s1": new_test_sensitive}
             cons_params = None  # constraint parameters, will use them later
             loss_function = "logreg"  # perform the experiments with logistic regression
             EPS = 1e-4
