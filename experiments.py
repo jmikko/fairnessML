@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     linear = True
     zafar = True
-    not_linear = False
+    not_linear = True
     our_epsilon = False
 
     if our_epsilon:
