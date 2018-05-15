@@ -9,7 +9,7 @@ from scipy.optimize import linprog
 from hardt import gamma_y_hat, HardtMethod
 from scipy.spatial import ConvexHull
 from uncorrelation_no_sensitive import UncorrelationMethod_no_sensitive as UncorrelationMethod
-from uncorrelation_nonlinear import Fair_SVM, polynomial_kernel, gaussian_kernel, linear_kernel
+from uncorrelation_nonlinear_no_sensitive import Fair_SVM_no_sensitive as Fair_SVM
 from uncorrelation_nonlinear_epsilon import Fair_SVM_eps
 import os, sys
 import numpy as np
@@ -69,7 +69,7 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 if __name__ == '__main__':
     # Experimental settings
     # 12, 8, 2, 13, 14
-    experiment_number = 14
+    experiment_number = 2
     smaller_option = False
     accuracy_balanced = False
     verbose = 3
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     linear = True
     zafar = True
-    not_linear = True
+    not_linear = False
     our_epsilon = False
 
     if our_epsilon:

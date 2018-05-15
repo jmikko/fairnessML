@@ -68,8 +68,8 @@ def balanced_accuracy_score(y_true, y_pred, sample_weight=None):
 if __name__ == '__main__':
     # Experimental settings
     # 12, 8, 2, 13, 14
-    experiment_number = 14
-    smaller_option = False
+    experiment_number = 2
+    smaller_option = True
     accuracy_balanced = False
     verbose = 3
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     linear = True
     zafar = True
-    not_linear = True
+    not_linear = False
     our_epsilon = False
 
     if our_epsilon:
